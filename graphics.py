@@ -14,6 +14,7 @@ import dummy
 
 from world import World, Event
 
+pygame.mixer.pre_init(buffer=512)
 pygame.init()
 
 scale = 64
