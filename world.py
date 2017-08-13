@@ -117,6 +117,14 @@ class Actor(GO):
     def accelerate(self, dt, acc):
         self.v += dt*acc
     
+    def pre_advance(self, dt, fric):
+        ds = dt*fric
+        s = abs(self.v)
+        if s <= ds:
+            self.v = 0j
+        else:
+            self.v *= (s-ds)/s
+    
     def advance(self, dt):
         self.p += dt*self.v
     
@@ -148,6 +156,7 @@ class World:
         self.obj = []
         self.step_time = 0.01
         self.default_setup()
+        self.friction = 15.
 
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]
@@ -177,7 +186,11 @@ class World:
     def step(self, acc):
         for i,a in enumerate(acc):
             self.main_ac[i].accelerate(self.step_time, a)
-            
+
+        for o in self.obj:
+            if hasattr(o, 'pre_advance'):
+                o.pre_advance(self.step_time, self.friction)
+
         while True:
             cola = []
             for i in xrange(len(self.obj)):
