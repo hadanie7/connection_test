@@ -135,6 +135,7 @@ class World:
         pass
         self.obj = []
         self.step_time = 0.01
+        self.push_speed = 5.
         self.default_setup()
         self.friction = 3.
         self.last_events = []
@@ -224,11 +225,14 @@ class World:
         if not o1.is_dynamic():
             assert o2.is_dynamic()
             o2.v /= col_vec
-            o2.v = -o2.v.real+1j*o2.v.imag
+            v_x = o2.v.real
+            o2.v = -v_x+1j*o2.v.imag
             o2.v *= col_vec
             locx = min(o1.p.real+1, max(o2.p.real, o1.p.real))
             locy = min(o1.p.imag+1, max(o2.p.imag, o1.p.imag))
             self.last_events.append(Event('wall collision', complex(locx, locy)))
+            if abs(v_x) >= self.push_speed and col_vec in [1j**i for i in range(4)]:
+                self.stone_impact(o1, -col_vec)
         else:
             #dynamic collision:
             o2.v /= col_vec
@@ -246,5 +250,14 @@ class World:
             o1.v *= col_vec
             loc = (o1.p*o2.get_radius() + o2.p*o1.get_radius()) / (o1.get_radius()+o2.get_radius())
             self.last_events.append(Event('ball collision', loc))
+    
+    def stone_impact(self, o, dear):
+        assert isinstance(o, Stone)
+        if not o.get_type() == 'box':
+            return
+        for o2 in self.obj:
+            if o2.get_class() == 'st' and o2.get_pos() == o.get_pos()+dear:
+                return
+        o.p += dear
         
 
