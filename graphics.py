@@ -13,10 +13,10 @@ from world import World
 
 pygame.init()
 
-scale = 32
+scale = 64
 w,h = 19,12
 
-ms_spd = 0.01
+ms_spd = 1.0
 
 bg_col = (0,192,0)
 
@@ -79,7 +79,7 @@ class WorldDrawer:
 
 
 def main():
-    scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)))
+    scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)), pygame.FULLSCREEN)
     
     clock = pygame.time.Clock()
     
@@ -88,14 +88,21 @@ def main():
     world = World()
     drawer = WorldDrawer(world)
     
+    pygame.mouse.set_visible(False)
+    
     
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
                 return
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return
+        acc = tup2comp(pygame.mouse.get_rel()) * ms_spd
                 
-        world.step([0.0+0.0j])
+        world.step([acc])
         drawer.draw(scr)
         
         pygame.display.flip()
