@@ -93,7 +93,7 @@ class Actor(GO):
         self.v += dt*acc
     
     def pre_advance(self, dt, fric):
-        ds = dt*fric
+        ds = dt*fric*abs(self.v)**0.8
         s = abs(self.v)
         if s <= ds:
             self.v = 0j
