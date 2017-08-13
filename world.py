@@ -42,9 +42,9 @@ def calcolission_seg(p11, p12, p2, r2, v2):
     sx = abs(sx) # equiv to (sy *= rot) up to numerical error and type
     p *= rot
     v = v2 * rot
-    p += r2*1j
     if v.imag <= 0 or p.imag >= 0:
         return INF, None
+    p += r2*1j
     cx = p.real - p.imag * v.real / v.imag
     if cx >= sx or cx <= 0:
         return INF, None
@@ -136,7 +136,7 @@ class World:
         self.obj = []
         self.step_time = 0.01
         self.default_setup()
-        self.friction = 15.
+        self.friction = 3.
         self.last_events = []
 
     def default_setup(self):
