@@ -6,6 +6,7 @@ Created on Sun Aug 13 15:20:38 2017
 """
 
 import math
+import copy
 
 def calcolission_r(p1, r1, v1, p2, r2, v2):
     v = v2-v1
@@ -69,7 +70,7 @@ class World:
         self.default_setup()
 
     def default_setup(self):
-        self.main_ac = Actor(11.5+6.5j)
+        self.main_ac = Actor(10.+6.5j)
         self.obj.append( self.main_ac )
         for i in range(20):
             self.obj.append( Stone(i+0j))
@@ -85,6 +86,8 @@ class World:
         for i in self.obj:
             yield i
 
+    def get_copy(self):
+        return copy.deepcopy(self)
 #end interface    
     
     def step(self, acc):
