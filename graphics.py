@@ -103,4 +103,8 @@ def main():
         clock.tick(fps_lim)
         
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        pygame.quit()
+        raise
