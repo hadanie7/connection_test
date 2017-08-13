@@ -8,10 +8,11 @@ Created on Sun Aug 13 15:15:19 2017
 import pygame
 from collections import deque
 import struct
+import os.path
 
 import dummy
 
-from world import World
+from world import World, Event
 
 pygame.init()
 
@@ -32,9 +33,18 @@ bord_color = (0,0,0)
 ac_cols = {'black':(0,0,0),
           'white':(255,255,255)}
           
-coll_t = 20
+coll_t = 10
 coll_s = 0.2
 coll_col = (255,128,0)
+
+sounds = {}
+def get_sound_path(name):
+    return os.path.join('sounds',name)
+def get_sound(name,filename):
+    sounds[name] = pygame.mixer.Sound(get_sound_path(filename))
+def play_sound(name):
+    sounds[name].play()
+get_sound('b_coll', 'ballcollision.wav')
 
 def tup2comp(v):
     x,y = v
@@ -81,7 +91,7 @@ class WorldDrawer:
                 rad = int(scale*obj.get_radius())
                 pygame.draw.circle(scr,color,pos,rad)
         for coll in collisions:
-            rad = coll_s * (coll_t - collisions[coll])/float(coll_t)
+            rad = coll_s * (coll_t+1 - collisions[coll])/float(coll_t)
             rad *= scale
             rad = int(rad)
             pos = me.wrld2scrn(world,coll.loc)
@@ -125,14 +135,17 @@ def main():
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
                 
         pred = world_steps(world,queues,my_cont)
+        fr = set()
         for coll in collisions:
             collisions[coll] -= 1
             if collisions[coll] == 0:
-                collisions.pop(coll)
+                fr.add(coll)
+        for coll in fr:
+            collisions.pop(coll)
                 
         for e in pred.get_last_events():
             if e.tp == 'ball collision':
-                collisions[e] = coll_t
+                play_sound('b_coll')
             if e.tp == 'wall collision':
                 collisions[e] = coll_t
         drawer.draw(scr,pred, collisions)
