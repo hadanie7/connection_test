@@ -7,6 +7,7 @@ Created on Sun Aug 13 15:15:19 2017
 
 import pygame
 from collections import deque
+import struct
 
 import dummy
 
@@ -30,6 +31,10 @@ bord_color = (0,0,0)
           
 ac_cols = {'black':(0,0,0),
           'white':(255,255,255)}
+          
+coll_t = 20
+coll_s = 0.2
+coll_col = (255,128,0)
 
 def tup2comp(v):
     x,y = v
@@ -60,7 +65,7 @@ class WorldDrawer:
         if pos:
             v += me.get_offset(world)
         return v
-    def draw(me, scr, world):
+    def draw(me, scr, world, collisions):
         scr.fill(bg_col)
         
                 
@@ -75,6 +80,12 @@ class WorldDrawer:
                 color = ac_cols[obj.get_color()]
                 rad = int(scale*obj.get_radius())
                 pygame.draw.circle(scr,color,pos,rad)
+        for coll in collisions:
+            rad = coll_s * (coll_t - collisions[coll])/float(coll_t)
+            rad *= scale
+            rad = int(rad)
+            pos = me.wrld2scrn(world,coll.loc)
+            pygame.draw.circle(scr,coll_col,pos,rad,1)
 
 def world_steps(world, queues, my_cont):
     while all([len(q)>0 for q in queues]):
@@ -100,6 +111,8 @@ def main():
     
     my_cont = 0
     
+    collisions = {}
+    
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
@@ -112,7 +125,17 @@ def main():
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
                 
         pred = world_steps(world,queues,my_cont)
-        drawer.draw(scr,pred)
+        for coll in collisions:
+            collisions[coll] -= 1
+            if collisions[coll] == 0:
+                collisions.pop(coll)
+                
+        for e in pred.get_last_events():
+            if e.tp == 'ball collision':
+                collisions[e] = coll_t
+            if e.tp == 'wall collision':
+                collisions[e] = coll_t
+        drawer.draw(scr,pred, collisions)
         
         pygame.display.flip()
         
