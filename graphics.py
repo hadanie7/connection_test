@@ -9,6 +9,8 @@ import pygame
 
 import dummy
 
+from world import World
+
 pygame.init()
 
 scale = 32
@@ -61,7 +63,7 @@ class WorldDrawer:
         return v
     def draw(me, scr):
         scr.fill(bg_col)
-        
+                
         for obj in me.world.get_objs():
             pos = me.wrld2scrn(obj.get_pos())
             cls = obj.get_class()
@@ -81,7 +83,8 @@ def main():
     clock = pygame.time.Clock()
     
     #should be changed later    
-    world = dummy.DummyWorld()
+    #world = dummy.DummyWorld()
+    world = World()
     drawer = WorldDrawer(world)
     
     while True:
@@ -90,7 +93,7 @@ def main():
                 pygame.quit()
                 return
                 
-        world.step(0.01+0j)
+        world.step(0.0+0j)
         drawer.draw(scr)
         
         pygame.display.flip()
