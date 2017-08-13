@@ -54,31 +54,6 @@ def calcolission_seg(p11, p12, p2, r2, v2):
     if DEBUG and abs(tth)<0.01: pprint.pprint(locals())
     return tth, col_vec
 
-def phys_col(o1, o2, col_vec):
-    if DEBUG: print 'boom!'
-    if not o2.is_dynamic():
-        o1, o2 = o2, o1
-    if not o1.is_dynamic():
-        assert o2.is_dynamic()
-        o2.v /= col_vec
-        o2.v = -o2.v.real+1j*o2.v.imag
-        o2.v *= col_vec
-        return
-    #dynamic collision:
-    o2.v /= col_vec
-    o1.v /= col_vec
-    vr1 = o1.v.real
-    vr2 = o2.v.real
-    # not solving this:
-    ## vr1*m1 + vr2*m2 = ur1*m1 + ur2*m2 
-    ## vr1^2*m1 + vr2^2*m2 = ur1^2*m1 + ur2^2*m2
-    ## we assume the masses are equal
-    assert o1.get_mass() == o2.get_mass()
-    o2.v = vr1+1j*o2.v.imag
-    o1.v = vr2+1j*o1.v.imag
-    o2.v *= col_vec
-    o1.v *= col_vec
-
 class GO:
     def __init__(self, init_pos):
         assert isinstance(init_pos, complex)
@@ -202,6 +177,13 @@ class World:
             if hasattr(o, 'pre_advance'):
                 o.pre_advance(self.step_time, self.friction)
 
+        def adv_all(dt):
+            for o in self.obj:
+                if hasattr(o, 'advance'):
+                    o.advance(self.step_time)
+
+        dtr = self.step_time
+
         while True:
             cola = []
             for i in xrange(len(self.obj)):
@@ -225,13 +207,43 @@ class World:
                                                  o2.p, o2.get_radius(), o2.v) )
 
             cola.sort(key=lambda x: x[2])
-            if len(cola) == 0 or cola[0][2] >= self.step_time:
+            if len(cola) == 0 or cola[0][2] >= dtr:
                 break
             curc = cola[0]
-            phys_col(curc[0],curc[1],curc[3])
-            
-                    
-        
+            dt = curc[2]
+            adv_all(dt)
+            dtr -= dt
+            self.phys_col(curc[0],curc[1],curc[3])
+        ## end collision loop
         for o in self.obj:
             if hasattr(o, 'advance'):
-                o.advance(self.step_time)
+                o.advance(dtr)
+    
+    def phys_col(self, o1, o2, col_vec):
+        if DEBUG: print 'boom!'
+        if not o2.is_dynamic():
+            o1, o2 = o2, o1
+        if not o1.is_dynamic():
+            assert o2.is_dynamic()
+            o2.v /= col_vec
+            o2.v = -o2.v.real+1j*o2.v.imag
+            o2.v *= col_vec
+            self.last_events.append(Event('wall collision', 0j))
+        else:
+            #dynamic collision:
+            o2.v /= col_vec
+            o1.v /= col_vec
+            vr1 = o1.v.real
+            vr2 = o2.v.real
+            # not solving this:
+            ## vr1*m1 + vr2*m2 = ur1*m1 + ur2*m2 
+            ## vr1^2*m1 + vr2^2*m2 = ur1^2*m1 + ur2^2*m2
+            ## we assume the masses are equal
+            assert o1.get_mass() == o2.get_mass()
+            o2.v = vr1+1j*o2.v.imag
+            o1.v = vr2+1j*o1.v.imag
+            o2.v *= col_vec
+            o1.v *= col_vec
+            self.last_events.append(Event('ball collision', 0j))
+        
+
