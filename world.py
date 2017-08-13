@@ -149,7 +149,12 @@ class Stone(GO):
         for i in range(4):
             ret.append( (cn[i-1], cn[i]) )
         return ret
-        
+
+class Event():
+    def __init__(self, tp, loc):
+        self.tp = tp
+        self.loc = loc
+
 class World:
     def __init__(self):
         pass
@@ -157,6 +162,7 @@ class World:
         self.step_time = 0.01
         self.default_setup()
         self.friction = 15.
+        self.last_events = []
 
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]
@@ -181,9 +187,14 @@ class World:
     
     def get_controller_count(self):
         return len(self.main_ac)
+    
+    def get_last_events(self):
+        return self.last_events
 #end interface    
     
     def step(self, acc):
+        self.last_events = []
+        
         for i,a in enumerate(acc):
             self.main_ac[i].accelerate(self.step_time, a)
 
