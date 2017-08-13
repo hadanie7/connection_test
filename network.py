@@ -6,6 +6,7 @@ Created on Sun Aug 13 22:26:59 2017
 """
 
 import socket
+import struct
 
 def print_my_ips():
     print 'your IP addresses are:'
@@ -26,3 +27,8 @@ def get_socket(serv_ip, serv_port = 5555):
         sock.connect((serv_ip,serv_port))
         sock.setblocking(0)
         return sock
+        
+def pack(f):
+    return str(struct.unpack('!q',struct.pack('!d',f))[0])
+def unpack(s):
+    return struct.unpack('!d',struct.pack('!q', int(s)))[0]
