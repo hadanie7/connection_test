@@ -71,7 +71,7 @@ class World:
 
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]
-        self.obj.append( self.main_ac )
+        self.obj.append( self.main_ac[0] )
         for i in range(20):
             self.obj.append( Stone(i+0j))
 #interface
