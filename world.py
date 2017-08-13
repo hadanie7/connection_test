@@ -228,7 +228,9 @@ class World:
             o2.v /= col_vec
             o2.v = -o2.v.real+1j*o2.v.imag
             o2.v *= col_vec
-            self.last_events.append(Event('wall collision', 0j))
+            locx = min(o2.p.real+1, max(o2.p.real, o1.p.real))
+            locy = min(o2.p.imag+1, max(o2.p.imag, o1.p.imag))
+            self.last_events.append(Event('wall collision', complex(locx, locy)))
         else:
             #dynamic collision:
             o2.v /= col_vec
@@ -244,6 +246,7 @@ class World:
             o1.v = vr2+1j*o1.v.imag
             o2.v *= col_vec
             o1.v *= col_vec
-            self.last_events.append(Event('ball collision', 0j))
+            loc = (o1.p*o2.get_radius() + o2.p*o1.get_radius()) / (o1.get_radius()+o2.get_radius())
+            self.last_events.append(Event('ball collision', loc))
         
 
