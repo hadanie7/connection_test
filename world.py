@@ -107,9 +107,12 @@ class Actor(GO):
         return 1.0
 
 class Stone(GO):
+    def __init__(self, init_pos, tp = 'wall'):
+        GO.__init__(self, init_pos)
+        self.tp = tp
     def get_type(self):
         """ 'box', 'wall' """
-        return 'wall'
+        return self.tp
     
     def get_corners(self):
         ret = []
@@ -131,13 +134,59 @@ class Event():
         self.loc = loc
 
 class World:
-    def __init__(self):
+    def __init__(self, filename = None):
         pass
         self.obj = []
         self.step_time = 0.01
-        self.default_setup()
+        if filename == None:
+            self.default_setup()
+        else:
+            self.load_from_file(filename)
         self.friction = 3.
         self.last_events = []
+        
+    def load_from_file(self, filename):
+        cls = {
+                '#':Stone,
+                'B':Stone,
+                '1':Actor,
+                '2':Actor,
+                }
+        tps = {
+                '#':'wall',
+                'B':'box',
+                '1':'black',
+                '2':'white',
+                }
+                
+        delta = {Stone:0+0j,
+                 Actor:0.5+0.5j}
+        
+        black = None
+        white = None
+        with open(filename) as f:
+            fx,fy = f.readline().split()
+            fx = int(fx)
+            fy = int(fy)
+                        
+            for i,line in enumerate(f):
+                for j,char in enumerate(line):
+                    if char in ' \n':
+                        continue
+                    cl = cls[char]
+                    tp = tps[char]
+                    d = delta[cl]
+                    y = fy + i + d
+                    x = fx + j + d
+                    obj = cl(x+1j*y, tp)
+                    self.obj.append(obj)
+                    
+                    if black == None and tp == 'black':
+                        black = obj
+                    if white == None and tp == 'white':
+                        white = obj
+        self.main_ac = [black,white]
+                    
 
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]

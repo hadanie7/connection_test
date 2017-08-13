@@ -113,7 +113,7 @@ def main():
     
     #should be changed later    
     #world = dummy.DummyWorld()
-    world = World()
+    world = World('levels\\test_level.txt')
     drawer = WorldDrawer()
     
     pygame.mouse.set_visible(False)
@@ -134,6 +134,9 @@ def main():
                     pygame.quit()
                     return
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
+        for i,q in enumerate(queues):
+            if i!=my_cont:
+                q.append(0+0j)
                 
         pred = world_steps(world,queues,my_cont)
         fr = set()
