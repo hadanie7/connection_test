@@ -35,8 +35,24 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     if DEBUG and abs(tth)<0.01: pprint.pprint(locals())
     return tth, col_vec
 
-def calcolission_seg(p1, r1, v1, p2, r2, v2):
-    raise NotImplementedError
+def calcolission_seg(p11, p12, p2, r2, v2):
+    sx = p12-p11
+    p = p2-p11
+    rot = (sx/abs(sx)).conjugate()
+    sx = abs(sx) # equiv to (sy *= rot) up to numerical error and type
+    p *= rot
+    v = v2 * rot
+    p += r2*1j
+    if v.imag <= 0 or p.imag >= 0:
+        return INF, None
+    cx = p.real - p.imag * v.real / v.imag
+    if cx >= sx or cx <= 0:
+        return INF, None
+    col_vec = -1j
+    tth = -p.imag/v.imag
+    col_vec /= rot
+    if DEBUG and abs(tth)<0.01: pprint.pprint(locals())
+    return tth, col_vec
 
 def phys_col(o1, o2, col_vec):
     if DEBUG: print 'boom!'
@@ -48,10 +64,24 @@ def phys_col(o1, o2, col_vec):
         o2.v = -o2.v.real+1j*o2.v.imag
         o2.v *= col_vec
         return
-    raise NotImplementedError
+    #dynamic collision:
+    o2.v /= col_vec
+    o1.v /= col_vec
+    vr1 = o1.v.real
+    vr2 = o2.v.real
+    # not solving this:
+    ## vr1*m1 + vr2*m2 = ur1*m1 + ur2*m2 
+    ## vr1^2*m1 + vr2^2*m2 = ur1^2*m1 + ur2^2*m2
+    ## we assume the masses are equal
+    assert o1.get_mass() == o2.get_mass()
+    o2.v = vr1+1j*o2.v.imag
+    o1.v = vr2+1j*o1.v.imag
+    o2.v *= col_vec
+    o1.v *= col_vec
 
 class GO:
     def __init__(self, init_pos):
+        assert isinstance(init_pos, complex)
         self.p = init_pos
     
     def get_pos(self):
@@ -69,9 +99,10 @@ class GO:
         return self.get_class() == 'ac'
     
 class Actor(GO):
-    def __init__(self, init_pos):
+    def __init__(self, init_pos, color = 'black'):
         GO.__init__(self, init_pos)
-        self.color = 'black'
+        assert color in ['black', 'white']
+        self.color = color
         self.radius = 19.0/64
         self.v = 0j
     
@@ -88,6 +119,9 @@ class Actor(GO):
     
     def advance(self, dt):
         self.p += dt*self.v
+    
+    def get_mass(self):
+        return 1.0
 
 class Stone(GO):
     def get_type(self):
@@ -96,9 +130,16 @@ class Stone(GO):
     
     def get_corners(self):
         ret = []
-        for i in range(2):
-            for j in range(2):
-                ret.append(self.get_pos()+i+1j*j)
+        hrot = 0.5+0.5j
+        for i in range(4):
+            ret.append(self.get_pos()+ hrot*(1+1j**i) )
+        return ret
+    
+    def get_sides(self):
+        cn = self.get_corners()
+        ret = []
+        for i in range(4):
+            ret.append( (cn[i-1], cn[i]) )
         return ret
         
 class World:
@@ -111,7 +152,8 @@ class World:
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]
         self.obj.append( self.main_ac[0] )
-        for i in range(20):
+        self.obj.append( Actor(5.+6.5j, color = 'white') )
+        for i in range(1):
             self.obj.append( Stone(i+0j))
 #interface
     
@@ -150,6 +192,13 @@ class World:
                         for cor in o1.get_corners():
                             cola.append((o1, o2)+
                                 calcolission_r(cor,0.,0.,o2.p, o2.get_radius(), o2.v) )
+                        for sd in o1.get_sides():
+                            cola.append((o1, o2)+
+                                calcolission_seg(sd[0], sd[1],o2.p, o2.get_radius(), o2.v) )
+                    elif o1.get_class() == 'ac':
+                        cola.append((o1, o2)+
+                                calcolission_r(o1.p, o1.get_radius(), o1.v,
+                                                 o2.p, o2.get_radius(), o2.v) )
 
             cola.sort(key=lambda x: x[2])
             if len(cola) == 0 or cola[0][2] >= self.step_time:
