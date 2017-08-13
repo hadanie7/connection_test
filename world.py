@@ -7,6 +7,7 @@ Created on Sun Aug 13 15:20:38 2017
 
 import math
 import copy
+import pprint
 
 DEBUG = True
 INF = float('inf')
@@ -15,32 +16,39 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     v = v2-v1
     p = p2-p1
     r = r1+r2
-    rot = (v/abs(v)).conjugate()
+    try:
+        rot = (v/abs(v)).conjugate()
+    except ZeroDivisionError:
+        return INF, None
     # rotate the problem about the origin such that v is positive
     v = abs(v) # equiv to (v *= rot) up to numerical error and type
     p *= rot
     if p.real > 0 or abs(p.imag) > r :
-        return INF
+        return INF, None
     
     hy = p.imag
     hx = - math.sqrt(r*r-hy*hy)
-    tth = -p.real/v + hx # time to hit
+    tth = (-p.real + hx)/v # time to hit
     col_vec = hx + 1j*hy
+    col_vec /= abs(col_vec)
     col_vec *= rot.conjugate()
-    if DEBUG: print tth, col_vec
+    if DEBUG and abs(tth)<0.01: pprint.pprint(locals())
     return tth, col_vec
 
 def calcolission_seg(p1, r1, v1, p2, r2, v2):
-    raise NotImplemented
+    raise NotImplementedError
 
 def phys_col(o1, o2, col_vec):
+    if DEBUG: print 'boom!'
     if not o2.is_dynamic():
         o1, o2 = o2, o1
     if not o1.is_dynamic():
         assert o2.is_dynamic()
         o2.v /= col_vec
-        o2.v = -o2.v.real
-    raise NotImplemented
+        o2.v = -o2.v.real+1j*o2.v.imag
+        o2.v *= col_vec
+        return
+    raise NotImplementedError
 
 class GO:
     def __init__(self, init_pos):
@@ -140,9 +148,11 @@ class World:
                         o1, o2 = o2, o1
                     if o1.get_class() == 'st':
                         for cor in o1.get_corners():
-                            cola.append((o1, o2)+calcolission_r(cor,0.,0.,o2.p, o2.get_radius, o2.v))
-            cola.sort(key = lambda a: a[2])
-            if len(cola) == 0 or cola[0][2] == INF:
+                            cola.append((o1, o2)+
+                                calcolission_r(cor,0.,0.,o2.p, o2.get_radius(), o2.v) )
+
+            cola.sort(key=lambda x: x[2])
+            if len(cola) == 0 or cola[0][2] >= self.step_time:
                 break
             curc = cola[0]
             phys_col(curc[0],curc[1],curc[3])
