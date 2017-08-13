@@ -30,6 +30,10 @@ class GO:
     
     def get_class(self):
         """ 'ac', 'st' """
+        if isinstance(self, Actor):
+            return 'ac'
+        else:
+            return 'st'
     
 class Actor(GO):
     def __init__(self, init_pos):
