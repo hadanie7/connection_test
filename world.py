@@ -215,9 +215,7 @@ class World:
             dtr -= dt
             self.phys_col(curc[0],curc[1],curc[3])
         ## end collision loop
-        for o in self.obj:
-            if hasattr(o, 'advance'):
-                o.advance(dtr)
+        adv_all(dtr)
     
     def phys_col(self, o1, o2, col_vec):
         if DEBUG: print 'boom!'
@@ -228,8 +226,8 @@ class World:
             o2.v /= col_vec
             o2.v = -o2.v.real+1j*o2.v.imag
             o2.v *= col_vec
-            locx = min(o2.p.real+1, max(o2.p.real, o1.p.real))
-            locy = min(o2.p.imag+1, max(o2.p.imag, o1.p.imag))
+            locx = min(o1.p.real+1, max(o2.p.real, o1.p.real))
+            locy = min(o1.p.imag+1, max(o2.p.imag, o1.p.imag))
             self.last_events.append(Event('wall collision', complex(locx, locy)))
         else:
             #dynamic collision:
