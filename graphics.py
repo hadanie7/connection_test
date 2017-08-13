@@ -49,7 +49,7 @@ class WorldDrawer:
     def get_offset(me):
         p = me.world.get_view_position()
         x = 0.5+0.5j
-        return p - mod(p-x,w,h) + x
+        return p - mod(p-x,w,h)-x
     def wrld2scrn(me, v, pos = True):
         if pos:
             v -= me.get_offset()
@@ -63,6 +63,7 @@ class WorldDrawer:
         return v
     def draw(me, scr):
         scr.fill(bg_col)
+        
                 
         for obj in me.world.get_objs():
             pos = me.wrld2scrn(obj.get_pos())
@@ -87,13 +88,14 @@ def main():
     world = World()
     drawer = WorldDrawer(world)
     
+    
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
                 return
                 
-        world.step(0.0+0j)
+        world.step(0.0+0.0j)
         drawer.draw(scr)
         
         pygame.display.flip()
