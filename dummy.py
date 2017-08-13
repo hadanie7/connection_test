@@ -48,6 +48,6 @@ class DummyWorld:
     def get_view_position(me):
         return me.objs[0].get_pos()
     def step(me, x):
-        me.objs[0].move(x)
+        me.objs[0].move(x[0])
     def get_objs(me):
         return me.objs

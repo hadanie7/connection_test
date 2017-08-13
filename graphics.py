@@ -95,7 +95,7 @@ def main():
                 pygame.quit()
                 return
                 
-        world.step(0.0+0.0j)
+        world.step([0.0+0.0j])
         drawer.draw(scr)
         
         pygame.display.flip()
