@@ -70,7 +70,7 @@ class World:
         self.default_setup()
 
     def default_setup(self):
-        self.main_ac = Actor(10.+6.5j)
+        self.main_ac = [Actor(10.+6.5j)]
         self.obj.append( self.main_ac )
         for i in range(20):
             self.obj.append( Stone(i+0j))
@@ -79,7 +79,7 @@ class World:
     def get_view_position(self):
         """return the position of the object that the display should follow
         complex"""
-        return self.main_ac.get_pos()
+        return self.main_ac[0].get_pos()
     
     def get_objs(self):
         """return list of objects"""
@@ -88,10 +88,14 @@ class World:
 
     def get_copy(self):
         return copy.deepcopy(self)
+    
+    def get_controller_count(self):
+        return len(self.main_ac)
 #end interface    
     
     def step(self, acc):
-        self.main_ac.accelerate(self.step_time, acc)
+        for i,a in enumerate(acc):
+            self.main_ac[i].accelerate(self.step_time, a)
         for o in self.obj:
             if hasattr(o, 'advance'):
                 o.advance(self.step_time)
