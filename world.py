@@ -8,6 +8,9 @@ Created on Sun Aug 13 15:20:38 2017
 import math
 import copy
 
+DEBUG = True
+INF = float('inf')
+
 def calcolission_r(p1, r1, v1, p2, r2, v2):
     v = v2-v1
     p = p2-p1
@@ -17,9 +20,27 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     v = abs(v) # equiv to (v *= rot) up to numerical error and type
     p *= rot
     if p.real > 0 or abs(p.imag) > r :
-        return None
-    tth = -p.real/v - math.sqrt(R*R-p.imag*p.imag) # time to hit
+        return INF
+    
+    hy = p.imag
+    hx = - math.sqrt(r*r-hy*hy)
+    tth = -p.real/v + hx # time to hit
+    col_vec = hx + 1j*hy
+    col_vec *= rot.conjugate()
+    if DEBUG: print tth, col_vec
+    return tth, col_vec
 
+def calcolission_seg(p1, r1, v1, p2, r2, v2):
+    raise NotImplemented
+
+def phys_col(o1, o2, col_vec):
+    if not o2.is_dynamic():
+        o1, o2 = o2, o1
+    if not o1.is_dynamic():
+        assert o2.is_dynamic()
+        o2.v /= col_vec
+        o2.v = -o2.v.real
+    raise NotImplemented
 
 class GO:
     def __init__(self, init_pos):
@@ -35,6 +56,9 @@ class GO:
             return 'ac'
         else:
             return 'st'
+    
+    def is_dynamic(self):
+        return self.get_class() == 'ac'
     
 class Actor(GO):
     def __init__(self, init_pos):
@@ -61,7 +85,14 @@ class Stone(GO):
     def get_type(self):
         """ 'box', 'wall' """
         return 'wall'
-
+    
+    def get_corners(self):
+        ret = []
+        for i in range(2):
+            for j in range(2):
+                ret.append(self.get_pos()+i+1j*j)
+        return ret
+        
 class World:
     def __init__(self):
         pass
@@ -96,6 +127,28 @@ class World:
     def step(self, acc):
         for i,a in enumerate(acc):
             self.main_ac[i].accelerate(self.step_time, a)
+            
+        while True:
+            cola = []
+            for i in xrange(len(self.obj)):
+                for j in xrange(i):
+                    o1 = self.obj[i]
+                    o2 = self.obj[j]
+                    if not (o1.is_dynamic() or o2.is_dynamic()):
+                        continue
+                    if o1.is_dynamic():
+                        o1, o2 = o2, o1
+                    if o1.get_class() == 'st':
+                        for cor in o1.get_corners():
+                            cola.append((o1, o2)+calcolission_r(cor,0.,0.,o2.p, o2.get_radius, o2.v))
+            cola.sort(key = lambda a: a[2])
+            if len(cola) == 0 or cola[0][2] == INF:
+                break
+            curc = cola[0]
+            phys_col(curc[0],curc[1],curc[3])
+            
+                    
+        
         for o in self.obj:
             if hasattr(o, 'advance'):
                 o.advance(self.step_time)
