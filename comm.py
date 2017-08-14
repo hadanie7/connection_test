@@ -26,9 +26,13 @@ if __name__ == "__main__":
     
     c = Clock()
     iii = 0
-    for i in range(10*1000):
+    STOP = 10*1000
+    while True:
         tms.append( c.get_time() )
-        w.write(str(iii))
+        
+        if iii < STOP:
+            w.write(str(iii))
+            
         for mes in r.read():
             miii = int(mes)
             assert miii == len(rec)
@@ -36,7 +40,9 @@ if __name__ == "__main__":
             
         iii += 1
         c.tick(0.001)
-    
+        if len(tms) >= STOP and len(rec) >= STOP:
+            break
+        
     s.close()
     tms = np.array(tms)
     rec = np.array(rec)
