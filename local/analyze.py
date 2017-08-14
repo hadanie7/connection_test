@@ -31,3 +31,4 @@ def plot_delay(rec):
     ax.plot(time, rec-time)
     ax.set_xlabel('time[s]')
     ax.set_ylabel('delay[s]')
+    ax.grid(True, which='both')
