@@ -189,9 +189,9 @@ def main():
     
     collisions = {}
     
-#    times = [None for i in xrange(10)]
-#    tm_i=-1
-#    show_time = False
+    times = [None for i in xrange(60)]
+    tm_i=-1
+    show_time = False
     
     while True:
         for e in pygame.event.get():
@@ -204,8 +204,8 @@ def main():
                     return
                 elif e.key == pygame.K_t:
                     scr.fill((128,128,128))
-#                elif e.key == pygame.K_c:
-#                    show_time = not show_time
+                elif e.key == pygame.K_c:
+                    show_time = not show_time
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
         for i,q in enumerate(queues):
             if i!=my_cont:
@@ -227,19 +227,19 @@ def main():
                 collisions[e] = coll_t
         drawer.draw(scr,pred, collisions)
         
-#        if show_time:
-#            if times[tm_i%10] !=None and times[(tm_i+1)%10] !=None:
-#                txt = str(10.0/(times[tm_i%10] - times[(tm_i+1)%10]))
-#                msg = font.render(txt,True,(0,0,0))
-#                tw,th = msg.get_size()
-#                rect = (0,0,tw+10,th+10)
-#                pygame.draw.rect(scr,(255,255,255),rect)
-#                scr.blit(msg,(5,5))
+        if show_time:
+            if times[tm_i%10] !=None and times[(tm_i+1)%10] !=None:
+                txt = str(10.0/(times[tm_i%10] - times[(tm_i+1)%10]))
+                msg = font.render(txt,True,(0,0,0))
+                tw,th = msg.get_size()
+                rect = (0,0,tw+10,th+10)
+                pygame.draw.rect(scr,(255,255,255),rect)
+                scr.blit(msg,(5,5))
         
         pygame.display.flip()
         
-#        tm_i+=1
-#        times[tm_i%10]=(time.clock())
+        tm_i+=1
+        times[tm_i%10]=(time.clock())
         
         clock.tick(fps_lim)
         
