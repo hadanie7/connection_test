@@ -318,5 +318,6 @@ class World:
             if o2.get_class() == 'st' and o2.get_pos() == o.get_pos()+dear:
                 return
         o.p += dear
+        self.last_events.append(Event('box move', o.get_pos()))
         
 
