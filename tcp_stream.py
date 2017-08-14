@@ -35,5 +35,11 @@ class StreamWriter:
         me.s = s
     def write(me,msg):
         me.lock.acquire()
-        me.s.sendall(msg+'|')
+        try:
+            me.s.sendall(msg+'|')
+        except socket.error,v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                raise
         me.lock.release()
