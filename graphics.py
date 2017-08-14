@@ -10,6 +10,8 @@ from collections import deque
 import os.path
 from math import floor
 
+import clock
+
 import time
 
 import dummy
@@ -173,84 +175,86 @@ def world_steps(world, queues, my_cont):
         prediction.step([q[i] if len(q)>i else 0+0j for q in queues])
     return prediction
 
-def main():
-    scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)), pygame.FULLSCREEN)
-    
-    clock = pygame.time.Clock()
-    
-    #world = dummy.DummyWorld()
-    world = World('levels\\test_level.txt')
-    drawer = WorldDrawer()
-    
-    pygame.mouse.set_visible(False)
-    
-    queues = [deque() for i in xrange(world.get_controller_count())]
-    
-    my_cont = 0
-    
-    collisions = {}
-    
-    times = [None]*60
-    tm_i=-1
-    show_time = False
-    
-    while True:
+class Main():
+    def __init__(me):
+        me.scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)), pygame.FULLSCREEN)
+                
+        #world = dummy.DummyWorld()
+        me.world = World('levels\\test_level.txt')
+        me.drawer = WorldDrawer()
+        
+        pygame.mouse.set_visible(False)
+        
+        me.queues = [deque() for i in xrange(me.world.get_controller_count())]
+        
+        me.my_cont = 0
+        
+        me.collisions = {}
+        
+        me.times = [None]*60
+        me.tm_i=-1
+        me.show_time = False
+    def step(me):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
-                return
+                return False
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    return
+                    return False
                 elif e.key == pygame.K_t:
-                    scr.fill((128,128,128))
+                    me.scr.fill((128,128,128))
                 elif e.key == pygame.K_c:
-                    show_time = not show_time
-        queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
+                    me.show_time = not me.show_time
+        me.queues[me.my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
         
-        for i,q in enumerate(queues): # simulate non moving mouse on other side
-            if i!=my_cont:
+        for i,q in enumerate(me.queues): # simulate non moving mouse on other side
+            if i!=me.my_cont:
                 q.append(0+0j)
                 
-        pred = world_steps(world,queues,my_cont)
+        pred = world_steps(me.world,me.queues,me.my_cont)
         fr = set()
-        for coll in collisions:
-            collisions[coll] -= 1
-            if collisions[coll] == 0:
+        for coll in me.collisions:
+            me.collisions[coll] -= 1
+            if me.collisions[coll] == 0:
                 fr.add(coll)
         for coll in fr:
-            collisions.pop(coll)
+            me.collisions.pop(coll)
                 
         for e in pred.get_last_events():
             if e.tp == 'ball collision':
                 play_sound('b_coll')
             if e.tp == 'wall collision':
-                collisions[e] = coll_t
+                me.collisions[e] = coll_t
                 play_sound('w_coll')
             if e.tp == 'box move':
                 play_sound('w_move')
-        drawer.draw(scr,pred, collisions)
+        me.drawer.draw(me.scr,pred, me.collisions)
         
-        if show_time:
-            if times[tm_i%10] !=None and times[(tm_i+1)%10] !=None:
-                txt = str(10.0/(times[tm_i%10] - times[(tm_i+1)%10]))
+        if me.show_time:
+            if me.times[me.tm_i%10] !=None and me.times[(me.tm_i+1)%10] !=None:
+                txt = str(10.0/(me.times[me.tm_i%10] - me.times[(me.tm_i+1)%10]))
                 msg = font.render(txt,True,(0,0,0))
                 tw,th = msg.get_size()
                 rect = (0,0,tw+10,th+10)
-                pygame.draw.rect(scr,(255,255,255),rect)
-                scr.blit(msg,(5,5))
+                pygame.draw.rect(me.scr,(255,255,255),rect)
+                me.scr.blit(msg,(5,5))
         
         pygame.display.flip()
         
-        tm_i+=1
-        times[tm_i%10]=(time.clock())
+        me.tm_i+=1
+        me.times[me.tm_i%10]=(time.clock())
         
-        clock.tick(fps_lim)
+        return True
+        
         
 if __name__ == "__main__":
     try:
-        main()
+        main = Main()
+        c = clock.Clock()
+        while main.step():
+            c.tick(0.01)
     except:
         pygame.quit()
         raise
