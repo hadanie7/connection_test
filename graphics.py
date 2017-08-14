@@ -176,7 +176,7 @@ def world_steps(world, queues, my_cont):
     return prediction
 
 class Main():
-    def __init__(me):
+    def __init__(me, my_cont = 0):
         me.scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)), pygame.FULLSCREEN)
                 
         #world = dummy.DummyWorld()
@@ -187,13 +187,15 @@ class Main():
         
         me.queues = [deque() for i in xrange(me.world.get_controller_count())]
         
-        me.my_cont = 0
+        me.my_cont = my_cont
         
         me.collisions = {}
         
         me.times = [None]*60
         me.tm_i=-1
         me.show_time = False
+    def add_controls(me, contr, force):
+        me.queues[contr].append(force)
     def step(me):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
@@ -207,12 +209,9 @@ class Main():
                     me.scr.fill((128,128,128))
                 elif e.key == pygame.K_c:
                     me.show_time = not me.show_time
-        me.queues[me.my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
-        
-        for i,q in enumerate(me.queues): # simulate non moving mouse on other side
-            if i!=me.my_cont:
-                q.append(0+0j)
-                
+        force = (tup2comp(pygame.mouse.get_rel()) * ms_spd)
+        me.add_controls(me.my_cont,force)
+                        
         pred = world_steps(me.world,me.queues,me.my_cont)
         fr = set()
         for coll in me.collisions:
@@ -255,6 +254,9 @@ if __name__ == "__main__":
         c = clock.Clock()
         while main.step():
             c.tick(0.01)
+            for i in xrange(len(main.queues)): # simulate non moving mouse on other side
+                if i!=main.my_cont:
+                    main.add_controls(i,0+0j)
     except:
         pygame.quit()
         raise
