@@ -50,6 +50,8 @@ def get_sound(name,filename):
 def play_sound(name):
     sounds[name].play()
 get_sound('b_coll', 'ballcollision.wav')
+get_sound('w_coll', 'st-stone.wav')
+get_sound('w_move', 'st-move.wav')
 
 def tup2comp(v):
     x,y = v
@@ -225,6 +227,9 @@ def main():
                 play_sound('b_coll')
             if e.tp == 'wall collision':
                 collisions[e] = coll_t
+                play_sound('w_coll')
+            if e.tp == 'box move':
+                play_sound('w_move')
         drawer.draw(scr,pred, collisions)
         
         if show_time:
