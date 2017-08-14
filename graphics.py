@@ -7,7 +7,6 @@ Created on Sun Aug 13 15:15:19 2017
 
 import pygame
 from collections import deque
-import struct
 import os.path
 
 import dummy
