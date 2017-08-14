@@ -145,6 +145,8 @@ class World:
     def __init__(self, filename = None):
         pass
         self.obj = []
+        self.acs = []
+        self.stone_dict = {}
         self.step_time = 0.01
         self.push_speed = 5.
         if filename == None:
@@ -189,7 +191,7 @@ class World:
                     y = fy + i + d
                     x = fx + j + d
                     obj = cl(x+1j*y, tp)
-                    self.obj.append(obj)
+                    self.add_obj(obj)
                     
                     if black == None and tp == 'black':
                         black = obj
@@ -200,10 +202,23 @@ class World:
 
     def default_setup(self):
         self.main_ac = [Actor(10.+6.5j)]
-        self.obj.append( self.main_ac[0] )
-        self.obj.append( Actor(5.+6.5j, color = 'white') )
+        self.add_obj( self.main_ac[0] )
+        self.add_obj( Actor(5.+6.5j, color = 'white') )
         for i in range(1):
-            self.obj.append( Stone(i+0j))
+            self.add_obj( Stone(i+0j))
+    
+    def add_obj(self, obj):
+        self.obj.append(obj)
+        if obj.get_class() == 'ac':
+            self.acs.append(obj)
+        if obj.get_class() == 'st':
+            self.stone_dict[obj.p] = obj
+    
+    def move_box(self, b, new_pos):
+        del self.stone_dict[b.p]
+        b.p = new_pos
+        self.stone_dict[b.p] = b
+        
 #interface
     
     def get_view_position(self):
@@ -243,28 +258,38 @@ class World:
             self.cur_time += dt
 
         dtr = self.step_time
+        cola = []
+        def cons_sa(o1, o2):
+            for cor in o1.get_corners():
+                cola.append((o1, o2)+
+                    calcolission_r(cor,0.,0.,o2.p, o2.get_radius(), o2.v) )
+            for sd in o1.get_sides():
+                cola.append((o1, o2)+
+                    calcolission_seg(sd[0], sd[1],o2.p, o2.get_radius(), o2.v) )
+
+        def cons_aa(o1, o2):
+            cola.append((o1, o2)+
+                calcolission_r(o1.p, o1.get_radius(), o1.v,
+                                 o2.p, o2.get_radius(), o2.v) )
 
         while True:
             cola = []
-            for i in xrange(len(self.obj)):
+            for i in xrange(len(self.acs)):
                 for j in xrange(i):
-                    o1 = self.obj[i]
-                    o2 = self.obj[j]
-                    if not (o1.is_dynamic() or o2.is_dynamic()):
-                        continue
-                    if o1.is_dynamic():
-                        o1, o2 = o2, o1
-                    if o1.get_class() == 'st':
-                        for cor in o1.get_corners():
-                            cola.append((o1, o2)+
-                                calcolission_r(cor,0.,0.,o2.p, o2.get_radius(), o2.v) )
-                        for sd in o1.get_sides():
-                            cola.append((o1, o2)+
-                                calcolission_seg(sd[0], sd[1],o2.p, o2.get_radius(), o2.v) )
-                    elif o1.get_class() == 'ac':
-                        cola.append((o1, o2)+
-                                calcolission_r(o1.p, o1.get_radius(), o1.v,
-                                                 o2.p, o2.get_radius(), o2.v) )
+                    o1 = self.acs[i]
+                    o2 = self.acs[j]
+                    cons_aa(o1, o2)
+            
+            for a in self.acs:
+                p2 = a.p+dtr*a.v
+                d = tuple((p.real, p.imag) for p in (a.p, p2))
+                bnd = tuple( tuple( int(ad + a.get_radius()*ml + op(d[i][j] for i in (0,1)) ) \
+                    for j in (0,1) ) for op, ml, ad in zip((min, max), (-1,1), (-0.001, 1.001)) )
+                for i in range(bnd[0][0], bnd[1][0]):
+                    for j in range(bnd[0][1], bnd[1][1]):
+                        c = complex(i,j)
+                        if c in self.stone_dict:
+                            cons_sa(self.stone_dict[c], a)
 
             cola.sort(key=lambda x: x[2])
             if len(cola) == 0 or cola[0][2] >= dtr:
@@ -317,6 +342,6 @@ class World:
         for o2 in self.obj:
             if o2.get_class() == 'st' and o2.get_pos() == o.get_pos()+dear:
                 return
-        o.p += dear
+        self.move_box(o, o.p + dear)
         
 
