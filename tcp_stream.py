@@ -46,3 +46,25 @@ class StreamWriter:
             else:
                 raise
         me.lock.release()
+
+class StreamRW:
+    def __init__(me, s):
+        me.s = s
+        me.r = StreamReader(s)
+        me.w = StreamWriter(s)
+        me.ok = True
+    def are_you_OK(me):
+        return me.ok
+    def close(me):
+        me.s.close()
+    def read(me):
+        try:
+            for msg in me.r.read():
+                yield msg
+        except:
+            me.ok = False
+    def write(me,msg):
+        try:
+            me.w.write(msg)
+        except:
+            me.ok = False
