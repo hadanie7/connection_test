@@ -12,7 +12,10 @@ class StreamReader:
     def read(me):
         try:
             while True:
-                for c in me.s.recv(1024):
+                r = me.s.recv(1024)
+                if r=='':
+                    break
+                for c in r:
                     me.arr[me.end] = c
                     me.end+=1
                     me.end %= me.size
