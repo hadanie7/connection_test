@@ -14,7 +14,7 @@ import time
 
 import dummy
 
-from world import World, Event
+from world import World
 
 pygame.mixer.pre_init(buffer=512)
 pygame.init()
@@ -178,7 +178,6 @@ def main():
     
     clock = pygame.time.Clock()
     
-    #should be changed later    
     #world = dummy.DummyWorld()
     world = World('levels\\test_level.txt')
     drawer = WorldDrawer()
@@ -191,7 +190,7 @@ def main():
     
     collisions = {}
     
-    times = [None for i in xrange(60)]
+    times = [None]*60
     tm_i=-1
     show_time = False
     
@@ -209,7 +208,8 @@ def main():
                 elif e.key == pygame.K_c:
                     show_time = not show_time
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
-        for i,q in enumerate(queues):
+        
+        for i,q in enumerate(queues): # simulate non moving mouse on other side
             if i!=my_cont:
                 q.append(0+0j)
                 
