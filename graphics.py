@@ -8,6 +8,9 @@ Created on Sun Aug 13 15:15:19 2017
 import pygame
 from collections import deque
 import os.path
+from math import floor
+
+import time
 
 import dummy
 
@@ -15,6 +18,8 @@ from world import World, Event
 
 pygame.mixer.pre_init(buffer=512)
 pygame.init()
+
+font = pygame.font.SysFont('arial',10,True)
 
 scale = 64
 w,h = 19,12
@@ -52,7 +57,9 @@ def tup2comp(v):
 def comp2tup(v):
     return (v.real, v.imag)
 def rnd_tup(v):
-    return tuple(int(x) for x in v)
+    return tuple(int(floor(x)) for x in v)
+def rnd_comp(v):
+    return tup2comp(rnd_tup(comp2tup(v)))
 def mod(v1,mx,my):
     x,y = comp2tup(v1)
     x %= mx
@@ -60,6 +67,10 @@ def mod(v1,mx,my):
     return tup2comp((x,y))
 
 class WorldDrawer:
+    def __init__(me):
+        me.positions = []
+        me.off = None
+        me.pcoll = []
     def get_offset(me,world):
         p = world.get_view_position()
         x = 0.5+0.5j
@@ -75,12 +86,62 @@ class WorldDrawer:
         if pos:
             v += me.get_offset(world)
         return v
+    def neighbor_tiles(me, v):
+        ds = [i+1j*j for i in xrange(-1,2) for j in xrange(-1,2)]
+        return {v+d for d in ds}
+    def tiles(me, obj, ppos = None):
+        tile = rnd_comp(obj.get_pos())
+        if ppos!=None:
+            ptile = rnd_comp(ppos)
+        if obj.get_class() == 'ac':
+            ret = me.neighbor_tiles(tile)
+            if ppos!=None:
+                ret |= me.neighbor_tiles(ptile)
+        else:
+            ret = {tile}
+            if ppos!=None:
+                ret.add(ptile)
+        return ret
     def draw(me, scr, world, collisions):
-        scr.fill(bg_col)
+        view_moved = me.off != me.get_offset(world)
+        moved = [view_moved for obj in world.get_objs()]
+        
+        
+        tiles_to_draw = set()
+        
+        for i,(obj,p) in enumerate(zip(world.get_objs(),me.positions)):
+            if p!=obj.get_pos():
+                moved[i] = True
+                
+        
+        for i,(obj,mv) in enumerate(zip(world.get_objs(), moved)):
+            if mv:
+                p = me.positions[i] if i<len(me.positions) else None
+                ext = me.tiles(obj,p)
+                tiles_to_draw |= ext
+        for coll in collisions:
+            ext = rnd_comp(coll.loc)
+            ext = me.neighbor_tiles(ext)
+            tiles_to_draw |= ext
+        for loc in me.pcoll:
+            ext = rnd_comp(loc)
+            ext = me.neighbor_tiles(ext)
+            tiles_to_draw |= ext
+        
+        if view_moved:
+            scr.fill(bg_col)
+        else:
+            for t in tiles_to_draw:
+                pos = me.wrld2scrn(world,t)
+                rect = pos + (scale,)*2
+                pygame.draw.rect(scr,bg_col,rect)
         
                 
         for obj in world.get_objs():
-            pos = me.wrld2scrn(world,obj.get_pos())
+            rpos = obj.get_pos()
+            if not any([t in tiles_to_draw for t in me.tiles(obj)]):
+                continue
+            pos = me.wrld2scrn(world,rpos)
             cls = obj.get_class()
             if cls == 'st':
                 color = st_cols[obj.get_type()]
@@ -90,12 +151,17 @@ class WorldDrawer:
                 color = ac_cols[obj.get_color()]
                 rad = int(scale*obj.get_radius())
                 pygame.draw.circle(scr,color,pos,rad)
+                
         for coll in collisions:
             rad = coll_s * (coll_t+1 - collisions[coll])/float(coll_t)
             rad *= scale
             rad = int(rad)
             pos = me.wrld2scrn(world,coll.loc)
             pygame.draw.circle(scr,coll_col,pos,rad,1)
+            
+        me.pcoll = [coll.loc for coll in collisions]
+        me.off = me.get_offset(world)
+        me.positions = [obj.get_pos() for obj in world.get_objs()]
 
 def world_steps(world, queues, my_cont):
     while all([len(q)>0 for q in queues]):
@@ -123,6 +189,10 @@ def main():
     
     collisions = {}
     
+#    times = [None for i in xrange(10)]
+#    tm_i=-1
+#    show_time = False
+    
     while True:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
@@ -132,6 +202,10 @@ def main():
                 if e.key == pygame.K_ESCAPE:
                     pygame.quit()
                     return
+                elif e.key == pygame.K_t:
+                    scr.fill((128,128,128))
+#                elif e.key == pygame.K_c:
+#                    show_time = not show_time
         queues[my_cont].append(tup2comp(pygame.mouse.get_rel()) * ms_spd)
         for i,q in enumerate(queues):
             if i!=my_cont:
@@ -153,7 +227,19 @@ def main():
                 collisions[e] = coll_t
         drawer.draw(scr,pred, collisions)
         
+#        if show_time:
+#            if times[tm_i%10] !=None and times[(tm_i+1)%10] !=None:
+#                txt = str(10.0/(times[tm_i%10] - times[(tm_i+1)%10]))
+#                msg = font.render(txt,True,(0,0,0))
+#                tw,th = msg.get_size()
+#                rect = (0,0,tw+10,th+10)
+#                pygame.draw.rect(scr,(255,255,255),rect)
+#                scr.blit(msg,(5,5))
+        
         pygame.display.flip()
+        
+#        tm_i+=1
+#        times[tm_i%10]=(time.clock())
         
         clock.tick(fps_lim)
         
