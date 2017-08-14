@@ -29,6 +29,7 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     hy = p.imag
     hx = - math.sqrt(r*r-hy*hy)
     tth = (-p.real + hx)/v # time to hit
+    assert tth >= 0
     col_vec = hx + 1j*hy
     col_vec /= abs(col_vec)
     col_vec *= rot.conjugate()
@@ -42,15 +43,22 @@ def calcolission_seg(p11, p12, p2, r2, v2):
     sx = abs(sx) # equiv to (sy *= rot) up to numerical error and type
     p *= rot
     v = v2 * rot
-    if v.imag <= 0 or p.imag >= 0:
-        return INF, None
     p += r2*1j
+    if v.imag <= 0:
+        return INF, None
+    col_vec = -1j
+    col_vec /= rot
+    if p.imag >= 0:
+        if True and p.real > 0 and p.real < sx and p.imag-r2 < 0:
+            return 0., col_vec
+        else:
+            return INF, None
     cx = p.real - p.imag * v.real / v.imag
     if cx >= sx or cx <= 0:
         return INF, None
-    col_vec = -1j
+    
     tth = -p.imag/v.imag
-    col_vec /= rot
+    assert tth >= 0
     if DEBUG and abs(tth)<0.01: pprint.pprint(locals())
     return tth, col_vec
 
@@ -145,6 +153,7 @@ class World:
             self.load_from_file(filename)
         self.friction = 3.
         self.last_events = []
+        self.cur_time = 0.
         
     def load_from_file(self, filename):
         cls = {
@@ -230,7 +239,8 @@ class World:
         def adv_all(dt):
             for o in self.obj:
                 if hasattr(o, 'advance'):
-                    o.advance(self.step_time)
+                    o.advance(dt)
+            self.cur_time += dt
 
         dtr = self.step_time
 
@@ -275,7 +285,7 @@ class World:
             assert o2.is_dynamic()
             o2.v /= col_vec
             v_x = o2.v.real
-            o2.v = -v_x+1j*o2.v.imag
+            o2.v = -o2.v.conjugate()
             o2.v *= col_vec
             locx = min(o1.p.real+1, max(o2.p.real, o1.p.real))
             locy = min(o1.p.imag+1, max(o2.p.imag, o1.p.imag))
