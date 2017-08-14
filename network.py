@@ -21,12 +21,11 @@ def get_socket(serv_ip, serv_port = 5555):
         serv.listen(1)
         sock,addr = serv.accept()
         serv.close()
-        return sock
     else:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((serv_ip,serv_port))
-        sock.setblocking(0)
-        return sock
+    sock.setblocking(0)
+    return sock
         
 def pack(f):
     return str(struct.unpack('!q',struct.pack('!d',f))[0])

@@ -8,9 +8,14 @@ import time
 
 class Clock:
     def __init__(me):
-        me.last = time.clock()
+        me.first = time.clock()
+        me.last = me.first        
+        
     def tick(me,wtime):
         time.sleep(max(0,me.last+wtime-time.clock()))
         while time.clock()<me.last+wtime:
             pass
         me.last = time.clock()
+    
+    def get_time(me):
+        return time.clock()-me.first
