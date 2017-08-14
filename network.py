@@ -32,3 +32,10 @@ def pack(f):
     return str(struct.unpack('!q',struct.pack('!d',f))[0])
 def unpack(s):
     return struct.unpack('!d',struct.pack('!q', int(s)))[0]
+    
+def pack_movement(cont, vec):
+    strs = str(cont),pack(vec.real),pack(vec.imag)
+    return ','.join(strs)
+def unpack_movement(s):
+    c,x,y = s.split(',')
+    return int(c),unpack(x)+1j*unpack(y)
