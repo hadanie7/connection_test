@@ -28,8 +28,7 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     
     hy = p.imag
     hx = - math.sqrt(r*r-hy*hy)
-    tth = (-p.real + hx)/v # time to hit
-    assert tth >= 0
+    tth = max(0., (-p.real + hx)/v) # time to hit
     col_vec = hx + 1j*hy
     col_vec /= abs(col_vec)
     col_vec *= rot.conjugate()
