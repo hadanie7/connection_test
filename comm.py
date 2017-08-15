@@ -60,4 +60,4 @@ if __name__ == "__main__":
     rec = np.array(rec)
 
     np.savez(get_timing_name(), tms = tms, rec = rec,
-             happy_ending=happy_ending, errs = conn.get_errs())
+             happy_ending=happy_ending)
