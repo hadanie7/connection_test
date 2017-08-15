@@ -23,7 +23,7 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     # rotate the problem about the origin such that v is positive
     v = abs(v) # equiv to (v *= rot) up to numerical error and type
     p *= rot
-    if p.real > 0 or abs(p.imag) > r :
+    if p.real >= 0 or abs(p.imag) >= r :
         return INF, None
     
     hy = p.imag
