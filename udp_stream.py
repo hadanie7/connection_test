@@ -239,7 +239,7 @@ class UDPStream_v2:
                     continue
                 if msg == me.HELLO:
                     me.connected = True
-                    if me.sock.getblocking():
+                    if me.sock.gettimeout() is None:
                         return
                     else:
                         continue
