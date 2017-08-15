@@ -222,7 +222,8 @@ class UDPStream_v2:
         me.errs.append((exc_info(), data))
         
     def get_msgs(me):
-        return me.unread.flush()
+        for m in me.unread.flush():
+            yield m[0]
     def insert_msg(me,msg):
         me.ack_lock.acquire()
         me.unack[me.cnt] = msg, time.clock()
