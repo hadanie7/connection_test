@@ -23,7 +23,7 @@ def calcolission_r(p1, r1, v1, p2, r2, v2):
     # rotate the problem about the origin such that v is positive
     v = abs(v) # equiv to (v *= rot) up to numerical error and type
     p *= rot
-    if p.real > 0 or abs(p.imag) > r :
+    if p.real >= 0 or abs(p.imag) >= r :
         return INF, None
     
     hy = p.imag
@@ -81,10 +81,11 @@ class GO:
         return self.get_class() == 'ac'
     
 class Actor(GO):
-    def __init__(self, init_pos, color = 'black'):
+    def __init__(self, init_pos, color = 'black', controller = None):
         GO.__init__(self, init_pos)
         assert color in ['black', 'white']
         self.color = color
+        self.controller = controller
         self.radius = 19.0/64
         self.v = 0j
     
@@ -197,6 +198,10 @@ class World:
                     if white == None and tp == 'white':
                         white = obj
         self.main_ac = [black,white]
+        if black:
+            black.controller = 0
+        if white:
+            white.controller = 1
                     
 
     def default_setup(self):
@@ -234,7 +239,7 @@ class World:
         return copy.deepcopy(self)
     
     def get_controller_count(self):
-        return len(self.main_ac)
+        return 1+max(-1, max(a.controller for a in self.acs))
     
     def get_last_events(self):
         return self.last_events
@@ -243,8 +248,9 @@ class World:
     def step(self, acc):
         self.last_events = []
         
-        for i,a in enumerate(acc):
-            self.main_ac[i].accelerate(self.step_time, a)
+        for a in self.acs:
+            if isinstance(a.controller, int):
+                a.accelerate(self.step_time, acc[a.controller])
 
         for o in self.obj:
             if hasattr(o, 'pre_advance'):
