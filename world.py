@@ -188,9 +188,9 @@ class World:
                     cl = cls[char]
                     tp = tps[char]
                     d = delta[cl]
-                    y = fy + i + d
-                    x = fx + j + d
-                    obj = cl(x+1j*y, tp)
+                    y = fy + i
+                    x = fx + j
+                    obj = cl(x+1j*y + d, tp)
                     self.add_obj(obj)
                     
                     if black == None and tp == 'black':
