@@ -53,6 +53,7 @@ class StreamRW:
         me.r = StreamReader(s)
         me.w = StreamWriter(s)
         me.ok = True
+        me.errs = []
     def are_you_OK(me):
         return me.ok
     def close(me):
@@ -61,10 +62,14 @@ class StreamRW:
         try:
             for msg in me.r.read():
                 yield msg
-        except:
+        except Exception as e:
             me.ok = False
+            me.err.append(e)
     def write(me,msg):
         try:
             me.w.write(msg)
-        except:
+        except Exception as e:
             me.ok = False
+            me.err.append(e)
+    def get_errs(me):
+        return me.errs
