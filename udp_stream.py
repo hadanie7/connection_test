@@ -19,28 +19,30 @@ class MsgOrder:
         me.cnt = 0
         me.lock = threading.Lock()
     def insert(me, ind, *data):
-        print 'la'
+        print 'la1'
+        ret = False
         me.lock.acquire()
-        if ind in me.ord:
-            return
-        if me.ovrd or ind not in me.unordered:
-            me.unordered[ind] = data
-        print 'lr'
+        if not ind in me.ord:
+            if me.ovrd or ind not in me.unordered:
+                ret = True
+                me.unordered[ind] = data
+        print 'lr1'
         me.lock.release()
+        return ret
     def flush(me):
-        print 'la'
+        print 'la2'
         me.lock.acquire()
         while len(me.unordered)>0 and min(me.unordered)==me.cnt:
             fy = me.unordered[me.cnt]
             me.unordered.pop(me.cnt)
             me.ord.add(me.cnt)
             me.cnt+=1
-            print 'lr'
+            print 'lr3'
             me.lock.release()
             yield fy
-            print 'la'
+            print 'la3'
             me.lock.acquire()
-        print 'lr'
+        print 'lr2'
         me.lock.release()
             
 #unthreaded
@@ -235,11 +237,11 @@ class UDPStream_v2:
         for m in me.unread.flush():
             yield m[0]
     def insert_msg(me,msg):
-        print 'la'
+        print 'la4'
         me.ack_lock.acquire()
         me.unack[me.cnt] = msg, time.clock()
         me.cnt+=1
-        print 'lr'
+        print 'lr4'
         me.ack_lock.release()
         
     def check_msgs(me):
@@ -252,23 +254,24 @@ class UDPStream_v2:
                     continue
                 if msg == me.HELLO:
                     me.connected = True
+                    print me.connect, me.sock.gettimeout()
                     if me.sock.gettimeout() is None:
                         return
                     else:
                         continue
                 msg = msg.split(me.SEP)
                 if msg[0] == me.ACK:
-                    print 'la'
+                    print 'la5'
                     me.ack_lock.acquire()
                     num = int(msg[1])
                     if num in me.unack:
                         me.unack.pop(num)
-                    print 'lr'
+                    print 'lr5'
                     me.ack_lock.release()
                 else:
                     num = int(msg[0])
-                    me.unread.insert(num,msg[1])
-                    me.send_ack(num)
+                    if me.unread.insert(num,msg[1]):
+                        me.send_ack(num)
         except socket.timeout:
             pass
         except socket.error, v:
@@ -291,7 +294,7 @@ class UDPStream_v2:
         except:
             me.log()
     def send_msgs(me):
-        print 'la'
+        print 'la6'
         me.ack_lock.acquire()
         for num in me.unack:
             msg,tm = me.unack[num]
@@ -306,7 +309,7 @@ class UDPStream_v2:
                     me.log(v)
             except:
                 me.log()
-        print 'lr'
+        print 'lr6'
         me.ack_lock.release()
     def connect(me):
         while not me.connected:
