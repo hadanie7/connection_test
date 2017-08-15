@@ -239,7 +239,10 @@ class UDPStream_v2:
                     continue
                 if msg == me.HELLO:
                     me.connected = True
-                    continue
+                    if me.sock.getblocking():
+                        return
+                    else:
+                        continue
                 msg = msg.split(me.SEP)
                 if msg[0] == me.ACK:
                     me.ack_lock.acquire()
