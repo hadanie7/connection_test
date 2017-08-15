@@ -33,17 +33,13 @@ class UDPStream:
                 while msg != me.HELLO:
                     msg,addr = me.sock.recvfrom(1024)
                 me.addr = addr
-                me.sock.sendto(me.HELLO,me.addr)
             else:
                 me.addr = (ip,port)
                 me.sock.sendto(me.HELLO, me.addr)
-                addr,msg = None,None
-                while addr != me.addr or msg != me.HELLO:
-                    msg,addr = me.sock.recvfrom(1024)
             me.sock.setblocking(0)
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
+            me.errs.append(exc_info())
 #            raise
     def write(me, msg):
         me.unacknoledged[me.snd_cnt] = msg, time.clock(), 0
@@ -53,7 +49,7 @@ class UDPStream:
             me.sock.sendto(msg,me.addr)
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
+            me.errs.append(exc_info())
 #            raise
             
         me.check_acknoledged()
@@ -74,14 +70,14 @@ class UDPStream:
                     me.sock.sendto(str(num)+me.SPR+msg,me.addr)
                 else:
                     me.ok = False
-#                    raise
+                    me.errs.append((time.clock(),tm,att,msg))
     def send_acknoledgement(me, num):
         try:
             msg = me.ACK+me.SPR+str(num)
             me.sock.sendto(msg,me.addr)
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
+            me.errs.append(exc_info())
 #            raise
     def acknoledged(me, num):
         if num in me.unacknoledged:
@@ -114,11 +110,12 @@ class UDPStream:
                 pass
             else:
                 me.ok = False
-                me.err.append((v,exc_info()))
+                me.errs.append((v,exc_info()))
+#                raise
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
-#                raise
+            me.errs.append(exc_info())
+#            raise
     def close(me):
         me.sock.close()
     def are_you_OK(me):
