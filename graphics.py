@@ -196,7 +196,7 @@ class Main():
         me.show_time = False
     def add_controls(me, contr, force):
         me.queues[contr].append(force)
-    def step(me):
+    def step(me, mouse_force_rec = None):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
@@ -210,6 +210,8 @@ class Main():
                 elif e.key == pygame.K_c:
                     me.show_time = not me.show_time
         force = (tup2comp(pygame.mouse.get_rel()) * ms_spd)
+        if mouse_force_rec:
+            mouse_force_rec[0] = force
         me.add_controls(me.my_cont,force)
                         
         pred = world_steps(me.world,me.queues,me.my_cont)
