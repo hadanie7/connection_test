@@ -36,6 +36,7 @@ class UDPStream:
             else:
                 me.addr = (ip,port)
                 me.sock.sendto(me.HELLO, me.addr)
+                print 'a'
             me.sock.setblocking(0)
         except Exception:
             me.ok = False
@@ -47,6 +48,13 @@ class UDPStream:
         me.snd_cnt += 1
         try:
             me.sock.sendto(msg,me.addr)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.ok = False
+                me.errs.append((v,exc_info()))
+#                raise
         except Exception:
             me.ok = False
             me.errs.append(exc_info())
@@ -67,7 +75,15 @@ class UDPStream:
             if time.clock()-tm > me.timeout:
                 if att+1<me.max_attempts:
                     me.unacknoledged[num] = msg,time.clock(),att+1
-                    me.sock.sendto(str(num)+me.SPR+msg,me.addr)
+                    try:
+                        me.sock.sendto(str(num)+me.SPR+msg,me.addr)
+                    except socket.error, v:
+                        if v[0] == errno.EWOULDBLOCK:
+                            pass
+                        else:
+                            me.ok = False
+                            me.errs.append((v,exc_info()))
+            #                raise
                 else:
                     me.ok = False
                     me.errs.append((time.clock(),tm,att,msg))
@@ -75,6 +91,13 @@ class UDPStream:
         try:
             msg = me.ACK+me.SPR+str(num)
             me.sock.sendto(msg,me.addr)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.ok = False
+                me.errs.append((v,exc_info()))
+#                raise
         except Exception:
             me.ok = False
             me.errs.append(exc_info())
