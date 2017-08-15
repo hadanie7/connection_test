@@ -9,6 +9,7 @@ from network import setup_conn
 import numpy as np
 from clock import Clock
 import time
+import traceback
 
 def get_timing_name():
     try:    
@@ -50,6 +51,8 @@ if __name__ == "__main__":
             break
         if not conn.are_you_OK():
             happy_ending = False
+            for et,e,tb in conn.get_errs():
+                traceback.print_tb(tb)
             break
         
     conn.close()
@@ -57,4 +60,4 @@ if __name__ == "__main__":
     rec = np.array(rec)
 
     np.savez(get_timing_name(), tms = tms, rec = rec,
-             happy_ending=happy_ending)
+             happy_ending=happy_ending, errs = conn.get_errs())
