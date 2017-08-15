@@ -193,12 +193,6 @@ class UDPStream_v2:
     ACK = 'ACK'
     SEP = '|'
     def __init__(me, port, ip):
-        me.addr = (ip,port)
-        me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            me.sock.bind(('',port))
-        except:
-            me.log()
         me.unread = MsgOrder(False)
         
         me.ack_lock = threading.Lock()
@@ -210,6 +204,13 @@ class UDPStream_v2:
         
         me.connected = False
         
+        me.addr = (ip,port)
+        me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            me.sock.bind(('',port))
+        except:
+            me.log()
+
         me.connect()
         me.sock.setblocking(0)
     def are_you_OK(me):
