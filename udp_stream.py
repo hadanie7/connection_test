@@ -189,6 +189,7 @@ class UDPStream_v2:
     def __init__(me, port, ip):
         me.addr = (ip,port)
         me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        me.sock.bind((ip,port))
         me.unread = MsgOrder(False)
         
         me.ack_lock = threading.Lock()
