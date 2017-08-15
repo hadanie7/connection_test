@@ -259,7 +259,9 @@ class UDPStream_v2:
                 if msg[0] == me.ACK:
                     print 'la'
                     me.ack_lock.acquire()
-                    me.unack.pop(int(msg[1]))
+                    num = int(msg[1])
+                    if num in me.unack:
+                        me.unack.pop(num)
                     print 'lr'
                     me.ack_lock.release()
                 else:
