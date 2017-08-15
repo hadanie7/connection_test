@@ -203,7 +203,7 @@ class UDPStream_v2:
         
         me.connect()
         me.sock.setblocking(0)
-    def are_you_ok(me):
+    def are_you_OK(me):
         return me.ok
     def get_errs(me):
         return me.errs
