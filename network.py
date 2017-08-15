@@ -9,6 +9,9 @@ import socket
 import struct
 
 import tcp_stream
+import udp_stream
+
+PORT = 5555
 
 def yes_or_no(s):
     return s.lower == 'y'
@@ -18,7 +21,7 @@ def print_my_ips():
     for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
         print ip
 
-def get_tcp_socket(serv_ip, serv_port = 5555):
+def get_tcp_socket(serv_ip, serv_port = PORT):
     if serv_ip == None:
         print_my_ips()
         serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +60,13 @@ def setup_conn():
         #
         #or
         #
-        #"UDP stream"
+        # "UDP stream"
+        #  <'serv'/'clnt'>
+        #
+        #or
+        #
+        # "UDP thrd stream"
+        #  <'serv'/'clnt'>
     
     if params[0] == 'TCP stream':
         if params[1] == 'serv':
@@ -67,4 +76,11 @@ def setup_conn():
                 ip = f.read()
         s = get_tcp_socket(ip)
         return tcp_stream.StreamRW(s)
-    
+    if params[0] == 'UDP stream':
+        if params[1] == 'serv':
+            ip = None
+        else:
+            with open('local\\conn_ip.txt') as f:
+                ip = f.read()
+        return udp_stream.UDPStream(PORT,ip)
+       
