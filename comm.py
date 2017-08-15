@@ -51,8 +51,11 @@ if __name__ == "__main__":
             break
         if not conn.are_you_OK():
             happy_ending = False
-            for et,e,tb in conn.get_errs():
-                traceback.print_tb(tb)
+            for e in conn.get_errs():
+                if len(e) == 4:
+                    print e
+                else:
+                    traceback.print_tb(e[2] if len(e)==3 else e[1][2])
             break
         
     conn.close()

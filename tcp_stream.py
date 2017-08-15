@@ -66,12 +66,12 @@ class StreamRW:
                 yield msg
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
+            me.errs.append(exc_info())
     def write(me,msg):
         try:
             me.w.write(msg)
         except Exception:
             me.ok = False
-            me.err.append(exc_info())
+            me.errs.append(exc_info())
     def get_errs(me):
         return me.errs
