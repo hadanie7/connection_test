@@ -189,7 +189,7 @@ class UDPStream_v2:
     def __init__(me, port, ip):
         me.addr = (ip,port)
         me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        me.sock.bind((ip,port))
+        me.sock.bind(('',port))
         me.unread = MsgOrder(False)
         
         me.ack_lock = threading.Lock()
@@ -233,6 +233,7 @@ class UDPStream_v2:
         try:
             while True:
                 msg,addr = me.sock.recvfrom(1024)
+                print msg,addr,me.addr
                 if addr != me.addr:
                     continue
                 if msg == me.HELLO:
@@ -272,6 +273,7 @@ class UDPStream_v2:
             msg,tm = me.unack[num]
             txt = str(num)+me.SEP+msg
             try:
+                print txt
                 me.sock.sendto(txt,me.addr)
             except socket.error, v:
                 if v[0] == errno.EWOULDBLOCK:
@@ -284,6 +286,7 @@ class UDPStream_v2:
     def connect(me):
         while not me.connected:
             try:
+                print me.HELLO
                 me.sock.sendto(me.HELLO,me.addr)
             except socket.error, v:
                 if v[0] == errno.EWOULDBLOCK:
