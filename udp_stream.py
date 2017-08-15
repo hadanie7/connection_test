@@ -38,6 +38,13 @@ class UDPStream:
                 me.sock.sendto(me.HELLO, me.addr)
                 print 'a'
             me.sock.setblocking(0)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.ok = False
+                me.errs.append((v,exc_info()))
+#                raise
         except Exception:
             me.ok = False
             me.errs.append(exc_info())
