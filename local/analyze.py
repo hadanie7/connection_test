@@ -29,6 +29,8 @@ def plot_delay(rec):
     ax.set_yscale('log')
     time = arange(0,len(rec))*0.001
     ax.plot(time, rec-time)
-    ax.set_xlabel('time[s]')
+    ax.set_xlabel('message[s]')
     ax.set_ylabel('delay[s]')
     ax.grid(True, which='both')
+
+plot_delay(rec)
