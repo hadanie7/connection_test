@@ -8,6 +8,7 @@ Created on Tue Aug 15 14:02:54 2017
 import socket
 import errno
 import time
+from sys import exc_info
 
 #unthreaded
 
@@ -40,9 +41,9 @@ class UDPStream:
                 while addr != me.addr or msg != me.HELLO:
                     msg,addr = me.sock.recvfrom(1024)
             me.sock.setblocking(0)
-        except Exception as e:
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
 #            raise
     def write(me, msg):
         me.unacknoledged[me.snd_cnt] = msg, time.clock(), 0
@@ -50,9 +51,9 @@ class UDPStream:
         me.snd_cnt += 1
         try:
             me.sock.sendto(msg,me.addr)
-        except Exception as e:
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
 #            raise
             
         me.check_acknoledged()
@@ -78,9 +79,9 @@ class UDPStream:
         try:
             msg = me.ACK+me.SPR+str(num)
             me.sock.sendto(msg,me.addr)
-        except Exception as e:
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
 #            raise
     def acknoledged(me, num):
         if num in me.unacknoledged:
@@ -113,10 +114,10 @@ class UDPStream:
                 pass
             else:
                 me.ok = False
-                me.err.append(v)
-        except Exception as e:
+                me.err.append((v,exc_info()))
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
 #                raise
     def close(me):
         me.sock.close()

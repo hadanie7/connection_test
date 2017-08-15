@@ -2,6 +2,8 @@ import errno
 import socket
 import threading
 
+from sys import exc_info
+
 class StreamReader:
     size = 2048
     def __init__(me,s):
@@ -62,14 +64,14 @@ class StreamRW:
         try:
             for msg in me.r.read():
                 yield msg
-        except Exception as e:
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
     def write(me,msg):
         try:
             me.w.write(msg)
-        except Exception as e:
+        except Exception:
             me.ok = False
-            me.err.append(e)
+            me.err.append(exc_info())
     def get_errs(me):
         return me.errs
