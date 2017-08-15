@@ -27,7 +27,7 @@ class MsgOrder:
         me.lock.release()
     def flush(me):
         me.lock.acquire()
-        while min(me.unordered)==me.cnt:
+        while len(me.unordered)>0 and min(me.unordered)==me.cnt:
             fy = me.unordered[me.cnt]
             me.unordered.pop(me.cnt)
             me.ord.add(me.cnt)
