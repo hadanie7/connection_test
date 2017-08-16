@@ -31,7 +31,7 @@ def main_loop(my_ac, game, conn, c, **args):
             ctr, frc = unpack_movement(m)
             game.add_controls(ctr, frc)
 
-        if not conn.are_you_ok():
+        if not conn.are_you_OK():
             print "a connection error ocurred:"
             print(conn.get_errs())
             print ''
