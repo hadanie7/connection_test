@@ -248,6 +248,8 @@ class Main():
         me.times[me.tm_i%10]=(time.clock())
         
         return True
+    def close(me):
+        pygame.quit()
         
         
 if __name__ == "__main__":
