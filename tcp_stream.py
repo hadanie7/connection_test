@@ -24,7 +24,7 @@ class StreamReader:
                         msgs.append(i - last)
                         last = i+1
                 for l in msgs:
-                    yield ''.join(me.queue.popleft() for i in xrange(len(l)))
+                    yield ''.join(me.queue.popleft() for i in xrange(l))
                     me.queue.popleft()
         except socket.error,v:
             if v[0] == errno.EWOULDBLOCK:
