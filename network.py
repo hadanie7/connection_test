@@ -48,6 +48,20 @@ def unpack_movement(s):
     return int(c),unpack(x)+1j*unpack(y)
     
 def setup_conn():
+    '''
+    returns connection object
+    interface:
+        read():
+            iterator over all new messages
+        write(msg):
+            send msg to other side
+        close():
+            close connection
+        are_you_OK():
+            returns True if no errors occured
+        get_errs():
+            returns list of error data for all errors
+    '''
     params = []
     with open('local\\conn_type.txt') as f:
         for line in f:
