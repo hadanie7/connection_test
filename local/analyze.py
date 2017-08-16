@@ -27,7 +27,7 @@ rec = d.rec
 def plot_delay(rec):
     fig, ax = plt.subplots()
     ax.set_yscale('log')
-    time = arange(0,len(rec))*0.01
+    time = np.arange(0,len(rec))*0.01
     ax.plot(time, rec-time)
     ax.set_xlabel('message[s]')
     ax.set_ylabel('delay[s]')
@@ -38,7 +38,7 @@ def plot_delay(rec):
 def plot2():
     fig, ax = plt.subplots()
     #ax.set_yscale('log')
-    time = arange(0,len(tms))*0.001
+    time = np.arange(0,len(tms))*0.001
     #ax.plot(time, time, label = 'expected')
     ax.plot(time, tms-time, label = 'sent')
     ax.plot(time[:len(rec)], rec-time[:len(rec)], label = 'recv')
