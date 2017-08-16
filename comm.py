@@ -34,9 +34,11 @@ if __name__ == "__main__":
     STOP = 10*1000
     STOP_ANYWAY = 20*1000
     happy_ending = True
+    
+    print 'a'
     while True:
         tms.append( c.get_time() )
-        
+        print iii
         if iii < STOP:
             conn.write(str(iii))
             
