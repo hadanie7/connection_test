@@ -66,6 +66,10 @@ def setup_conn():
         #or
         #
         # "UDP stream 2"
+        #
+        #or
+        #
+        # "UDP stream 2thrd"
     
     if params[0] == 'TCP stream':
         if params[1] == 'serv':
@@ -86,3 +90,7 @@ def setup_conn():
         with open('local\\conn_ip.txt') as f:
             ip = f.read()
         return udp_stream.UDPStream_v2(PORT,ip)
+    if params[0] == 'UDP stream 2thrd':
+        with open('local\\conn_ip.txt') as f:
+            ip = f.read()
+        return udp_stream.UDPStream_v2_Thread(PORT,ip)
