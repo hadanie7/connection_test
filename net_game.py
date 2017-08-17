@@ -9,8 +9,9 @@ import clock
 from graphics import Main
 from network import setup_conn
 from network import pack_movement, unpack_movement
+import logs
 
-def main_loop(my_ac, game, conn, c, **args):
+def main_loop(my_ac, game, conn, c, log, **args):
     iii = 0
     while True:
         force_ref = [None]
@@ -18,6 +19,8 @@ def main_loop(my_ac, game, conn, c, **args):
             conn.write("bye")
             print "game closed normally"
             return
+        
+        log['tms'].append(c.get_time())
         conn.write(pack_movement(my_ac, force_ref[0]))
         c.tick(0.01)
 #        for i in xrange(len(main.queues)): # simulate non moving mouse on other side
@@ -28,6 +31,7 @@ def main_loop(my_ac, game, conn, c, **args):
                 game.close()
                 print "game closed by other side"
                 return
+            log['rec'].append(c.get_time())
             ctr, frc = unpack_movement(m)
             game.add_controls(ctr, frc)
 
@@ -44,9 +48,11 @@ if __name__ == "__main__":
         conn = setup_conn()
         game = Main(my_cont = my_ac)
         c = clock.Clock()
+        log = dict(tms=[], rec=[])
         ## select our actor our actor
         main_loop(**locals())
     except:
         game.close()
         raise
     conn.close()
+    logs.save_log(**log)

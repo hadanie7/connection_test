@@ -6,24 +6,10 @@ Created on Mon Aug 14 20:59:44 2017
 """
 
 from network import setup_conn
-import numpy as np
 from clock import Clock
-import time
 import traceback
 
-def get_timing_name():
-    with open('local\\timing_path.txt') as f:
-        timing_path = f.read()
-    try:    
-        with open(timing_path+'/counter.txt', 'r+') as f:
-            n = int(f.read())
-            f.seek(0)
-            f.write(str(n+1))
-            f.truncate()
-    except:
-        n = 10000+int(time.clock()*1000000) # choose random name
-    n = str(n).zfill(4)
-    return timing_path+'/dump{}.npz'.format(n)
+import logs
 
 if __name__ == "__main__":
     conn = setup_conn()
@@ -61,8 +47,6 @@ if __name__ == "__main__":
             break
         
     conn.close()
-    tms = np.array(tms)
-    rec = np.array(rec)
-
-    np.savez(get_timing_name(), tms = tms, rec = rec,
+    
+    logs.save_log(tms = tms, rec = rec,
              happy_ending=happy_ending, errs = conn.get_errs())
