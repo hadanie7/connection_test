@@ -103,3 +103,7 @@ def setup_conn():
         with open('local\\conn_ip.txt') as f:
             ip = f.read()
         return udp_stream_v2.UDPStreamRed(PORT,ip)
+    if params[0] == 'UDP stream grp':
+        with open('local\\conn_ip.txt') as f:
+            ip = f.read()
+        return udp_stream_v2.UDPStreamGrp(PORT,ip)

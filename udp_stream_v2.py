@@ -10,6 +10,8 @@ from sys import exc_info
 import errno
 import time
 
+from collections import deque
+
 class Unord:
     def __init__(me):
         me.unread = {}
@@ -54,7 +56,7 @@ class UDPStreamRed:
         me.ok = False
         me.errs.append((exc_info(),data))
     def send(me, txt):
-        print txt
+#        print txt
         try:
             me.sock.sendto(txt,me.addr)
         except socket.error, v:
@@ -124,6 +126,137 @@ class UDPStreamRed:
         me.get_msgs()
         for data in me.unread.read():
             yield data[0]
+    def close(me):
+        try:
+            me.sock.close()
+        except:
+            me.log()
+    def are_you_OK(me):
+        return me.ok
+    def get_errs(me):
+        return me.errs
+        
+class UDPStreamGrp:
+    SEP = '|'
+    ACK = 'ACK'
+    HELLO = 'hello'
+    
+    class MsgPack:
+        lim = 20
+        def __init__(me, num, msg):
+            me.n = num
+            me.txt = msg
+            me.l = 1
+            me.sts = [0]
+        def full(me):
+            return me.l==me.lim
+        def insert(me, msg):
+            me.l+=1
+            me.sts.append(len(me.txt)+1)
+            me.txt += UDPStreamGrp.SEP + msg
+        def get_txt(me):
+            return str(me.n)+UDPStreamGrp.SEP+me.txt
+        def cut(me, N):
+            if me.n+me.l-1 >= N:
+                return True
+            d = N-me.n+1
+            me.l -= d
+            me.txt = me.txt[me.sts[d]-me.sts[0]]
+            me.sts = me.sts[d:]
+            return False
+            
+            
+    def __init__(me, port, ip):
+        me.addr = (ip,port)
+        
+        me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        me.sock.bind(('',port))
+        
+        me.unack = deque()
+        me.snd_cnt = 0
+        
+        me.connected = False
+        me.ok = True
+        me.errs = []
+        
+        me.unread = deque()
+        me.rec_cnt = 0
+        
+        me.connect()
+        
+        me.sock.setblocking(0)
+        
+    def log(me, *data):
+        me.ok = False
+        me.errs.append((exc_info(),data))
+
+    def send(me, txt):
+#        print txt
+        try:
+            me.sock.sendto(txt,me.addr)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.log(v)
+        except:
+            me.log()
+    def send_ack(me, num):
+        me.send(me.ACK + me.SEP + str(num))
+    def resend(me):
+        for mp in me.unack:
+            me.send(mp.get_txt())
+    
+    def get_msgs(me):
+        try:
+            while True:
+                msg,addr = me.sock.recvfrom(1024)
+                if addr!=me.addr:
+                    continue
+                if msg == '':
+                    return
+                if msg == me.HELLO:
+                    me.connected = True
+                    return
+                msg = msg.split(me.SEP)
+                if msg[0] == me.ACK:
+                    n = int(msg[1])
+                    while len(me.unack)>0 and me.unack[0].cut(n):
+                        me.unack.popleft()
+                else:
+                    n = int(msg[0])
+                    l = len(msg)-1
+                    if me.rec_cnt < n+l and me.rec_cnt >= n:
+                        me.send_ack(n+l-1)
+                        me.unread.extend(msg[1+me.rec_cnt-n:])
+                        me.rec_cnt = n+l
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.log(v)
+        except:
+            me.log()
+    def connect(me):
+        while not me.connected:
+            me.send(me.HELLO)
+            me.get_msgs()
+        me.send(me.HELLO)
+    
+    
+    def write(me, msg):
+        if len(me.unack)==0 or me.unack[-1].full():
+            me.unack.append(me.MsgPack(me.snd_cnt, msg))
+        else:
+            me.unack[-1].insert(msg)
+        me.snd_cnt += 1
+        
+        me.resend()
+    def read(me):
+        me.get_msgs()
+        
+        while len(me.unread)>0:
+            yield me.unread.popleft()
     def close(me):
         try:
             me.sock.close()
