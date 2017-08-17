@@ -163,11 +163,11 @@ class UDPStreamGrp:
             if d<=0:
                 return False
             me.l -= d
-            print me.n, me.l, N, d
-            print me.txt, me.sts
+#            print me.n, me.l, N, d
+#            print me.txt, me.sts
             me.txt = me.txt[me.sts[d]-me.sts[0]:]
             me.sts = me.sts[d:]
-            me.n = N
+            me.n = N+1
             return False
             
             
@@ -231,10 +231,12 @@ class UDPStreamGrp:
                 else:
                     n = int(msg[0])
                     l = len(msg)-1
+#                    print n,l,me.rec_cnt,msg
                     if me.rec_cnt < n+l and me.rec_cnt >= n:
                         me.send_ack(n+l-1)
                         me.unread.extend(msg[1+me.rec_cnt-n:])
                         me.rec_cnt = n+l
+#                    print me.unread
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
@@ -254,8 +256,9 @@ class UDPStreamGrp:
             me.unack.append(me.MsgPack(me.snd_cnt, msg))
         else:
             me.unack[-1].insert(msg)
-        me.snd_cnt += 1
         
+        me.snd_cnt += 1
+                
         me.resend()
     def read(me):
         me.get_msgs()
