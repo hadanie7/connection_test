@@ -157,10 +157,12 @@ class UDPStreamGrp:
         def get_txt(me):
             return str(me.n)+UDPStreamGrp.SEP+me.txt
         def cut(me, N):
-            if me.n+me.l-1 >= N:
+            if me.n+me.l-1 <= N:
                 return True
             d = N-me.n+1
             me.l -= d
+            print me.n, me.l, N, d
+            print me.txt, me.sts
             me.txt = me.txt[me.sts[d]-me.sts[0]]
             me.sts = me.sts[d:]
             me.n = N
