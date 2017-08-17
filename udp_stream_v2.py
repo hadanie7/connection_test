@@ -163,7 +163,7 @@ class UDPStreamGrp:
             me.l -= d
             print me.n, me.l, N, d
             print me.txt, me.sts
-            me.txt = me.txt[me.sts[d]-me.sts[0]]
+            me.txt = me.txt[me.sts[d]-me.sts[0]:]
             me.sts = me.sts[d:]
             me.n = N
             return False
