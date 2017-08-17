@@ -12,8 +12,10 @@ import time
 import traceback
 
 def get_timing_name():
+    with open('local\\timing_path.txt') as f:
+        timing_path = f.read()
     try:    
-        with open('local/timing/counter.txt', 'r+') as f:
+        with open(timing_path+'/counter.txt', 'r+') as f:
             n = int(f.read())
             f.seek(0)
             f.write(str(n+1))
@@ -21,7 +23,7 @@ def get_timing_name():
     except:
         n = 10000+int(time.clock()*1000000) # choose random name
     n = str(n).zfill(4)
-    return 'local/timing/dump{}.npz'.format(n)
+    return timing_path+'/dump{}.npz'.format(n)
 
 if __name__ == "__main__":
     conn = setup_conn()
@@ -41,7 +43,6 @@ if __name__ == "__main__":
         print iii
         if iii < STOP:
             conn.write(str(iii))
-            
         for mes in conn.read():
             miii = int(mes)
             assert miii == len(rec)
