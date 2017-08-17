@@ -54,6 +54,7 @@ class UDPStreamRed:
         me.ok = False
         me.errs.append((exc_info(),data))
     def send(me, txt):
+        print txt
         try:
             me.sock.sendto(txt,me.addr)
         except socket.error, v:
@@ -71,7 +72,7 @@ class UDPStreamRed:
     def resend(me):
         nums = list(me.unack)
         for i in xrange(0,len(nums),me.num_lim):
-            txt = me.MSEP.join(str(num)+me.SEP+me.unack[num][0] for num in nums)
+            txt = me.MSEP.join(str(num)+me.SEP+me.unack[num][0] for num in nums[i:i+me.num_lim])
             me.send(txt)
     def ack(me, num):
         if num in me.unack:
