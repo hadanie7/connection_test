@@ -197,7 +197,7 @@ class UDPStream_v2:
     def __init__(me, port, ip):
         me.unread = MsgOrder(False)
         
-        me.ack_lock = threading.Lock()
+        me.ack_lock = threading.RLock()
         me.unack = {}
         me.cnt = 0
         
@@ -250,6 +250,7 @@ class UDPStream_v2:
         me.cnt+=1
         #print 'lr4'
         me.ack_lock.release()
+        return me.cnt - 1
         
     def send(me,txt):
         me.snd_lock.acquire()
@@ -308,18 +309,24 @@ class UDPStream_v2:
         #print 'la6'
         me.ack_lock.acquire()
         for num in me.unack:
-            msg,tm = me.unack[num]
-            txt = str(num)+me.SEP+msg
-            try:
-                #print txt
-                me.send(txt)
-            except socket.error, v:
-                if v[0] == errno.EWOULDBLOCK:
-                    pass
-                else:
-                    me.log(v)
-            except:
-                me.log()
+            me.send_msg(num)
+        #print 'lr6'
+        me.ack_lock.release()
+    def send_msg(me, num):
+        #print 'la6'
+        me.ack_lock.acquire()
+        msg,tm = me.unack[num]
+        txt = str(num)+me.SEP+msg
+        try:
+            #print txt
+            me.send(txt)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.log(v)
+        except:
+            me.log()
         #print 'lr6'
         me.ack_lock.release()
     def connect(me):
@@ -371,12 +378,9 @@ class UDPStream_v2_Thread(UDPStream_v2):
     def read(me):
         return me.get_msgs()
     def write(me,msg):
-        me.insert_msg(msg)
+        num = me.insert_msg(msg)
         
-        me.write_cond.acquire()
-        me.write_cond.notify()
-        me.write_cond.release()
-    
+        me.send_msg(num)
     def is_open(me):
         me.ok_lock.acquire()
         ret = me.open
