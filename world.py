@@ -225,10 +225,10 @@ class World:
         
 #interface
     
-    def get_view_position(self):
+    def get_view_position(self, controller):
         """return the position of the object that the display should follow
         complex"""
-        return self.main_ac[0].get_pos()
+        return self.main_ac[controller].get_pos()
     
     def get_objs(self):
         """return list of objects"""
