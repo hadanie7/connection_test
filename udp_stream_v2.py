@@ -152,7 +152,7 @@ class UDPStreamGrp:
             return me.l==me.lim
         def insert(me, msg):
             me.l+=1
-            me.sts.append(len(me.txt)+1)
+            me.sts.append(len(me.txt)+1+me.sts[0])
             me.txt += UDPStreamGrp.SEP + msg
         def get_txt(me):
             return str(me.n)+UDPStreamGrp.SEP+me.txt
