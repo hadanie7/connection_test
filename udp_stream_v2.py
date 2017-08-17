@@ -160,6 +160,8 @@ class UDPStreamGrp:
             if me.n+me.l-1 <= N:
                 return True
             d = N-me.n+1
+            if d<=0:
+                return False
             me.l -= d
             print me.n, me.l, N, d
             print me.txt, me.sts
