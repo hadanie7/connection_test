@@ -352,7 +352,8 @@ class UDPStream_v2:
                 me.log(v)
         except:
             me.log()
-            
+    def get_ext_data(me):
+        {}            
 
 class UDPStream_v2_Thread(UDPStream_v2):
     def __init__(me, port, ip):
@@ -395,4 +396,5 @@ class UDPStream_v2_Thread(UDPStream_v2):
             me.write_cond.acquire()
             me.write_cond.wait(0.05)
             me.send_msgs()
+    
     

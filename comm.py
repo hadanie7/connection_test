@@ -45,6 +45,7 @@ if __name__ == "__main__":
             conn.write(str(iii))
         for mes in conn.read():
             miii = int(mes)
+#            print '',miii
             assert miii == len(rec)
             rec.append( c.get_time() )            
             
@@ -63,4 +64,4 @@ if __name__ == "__main__":
     rec = np.array(rec)
 
     np.savez(get_timing_name(), tms = tms, rec = rec,
-             happy_ending=happy_ending)
+             happy_ending=happy_ending, **conn.get_ext_data())

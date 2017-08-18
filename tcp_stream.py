@@ -75,3 +75,5 @@ class StreamRW:
             me.errs.append(exc_info())
     def get_errs(me):
         return me.errs
+    def get_ext_data(me):
+        {}

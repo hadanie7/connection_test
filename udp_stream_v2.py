@@ -135,6 +135,8 @@ class UDPStreamRed:
         return me.ok
     def get_errs(me):
         return me.errs
+    def get_ext_data(me):
+        {}
         
 class UDPStreamGrp:
     SEP = '|'
@@ -187,6 +189,8 @@ class UDPStreamGrp:
         me.unread = deque()
         me.rec_cnt = 0
         
+        me.ext_data = {'snt':0,'rec':0,'asnt':0,'arec':0}
+        
         me.connect()
         
         me.sock.setblocking(0)
@@ -198,6 +202,7 @@ class UDPStreamGrp:
     def send(me, txt):
 #        print txt
         try:
+            me.ext_data['snt']+=1
             me.sock.sendto(txt,me.addr)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
@@ -207,6 +212,7 @@ class UDPStreamGrp:
         except:
             me.log()
     def send_ack(me, num):
+        me.ext_data['asnt']+=1
         me.send(me.ACK + me.SEP + str(num))
     def resend(me):
         for mp in me.unack:
@@ -223,6 +229,7 @@ class UDPStreamGrp:
                     if ack:
                         me.send_ack(me.rec_cnt-1)
                     return
+                me.ext_data['rec']+=1
                 if msg == me.HELLO:
                     me.connected = True
                     if ack:
@@ -230,6 +237,7 @@ class UDPStreamGrp:
                     return
                 msg = msg.split(me.SEP)
                 if msg[0] == me.ACK:
+                    me.ext_data['arec']+=1
                     n = int(msg[1])
                     while len(me.unack)>0 and me.unack[0].cut(n):
                         me.unack.popleft()
@@ -281,3 +289,5 @@ class UDPStreamGrp:
         return me.ok
     def get_errs(me):
         return me.errs
+    def get_ext_data(me):
+        return me.ext_data
