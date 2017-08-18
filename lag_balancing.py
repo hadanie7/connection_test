@@ -14,8 +14,9 @@ max_delays = deque()
 my_maxs = deque()
 his_maxs = deque()
 cur_dif = 0
-# send
-# normal_step
+target_dif = 0
+send = None
+normal_step = None
 
 def add_delay(i, d):
     while len(max_delays) > 0 and d > max_delays[-1][1]:
@@ -33,8 +34,8 @@ def try_cal():
     while len(my_maxs) > 0 and len(his_maxs) > 0:
         mm = my_maxs.popleft()
         hm = his_maxs.popleft()
-        global cur_dif
-        cur_dif = mm-hm
+        global target_dif
+        target_dif = cur_dif + mm-hm
 
 
 def recv(i, m):
@@ -52,6 +53,7 @@ def report_delay(i, d):
 def get_step():
     """returns step size"""
     global cur_dif
-    sgn = 0 if cur_dif == 0 else (-1 if cur_dif < 0 else 1)
-    cur_dif -= time_modulus*sgn*2
+    tdir = target_dif - cur_dif
+    sgn = 0 if tdir == 0 else (-1 if tdir < 0 else 1) # positive - slow down
+    cur_dif += time_modulus*sgn*2
     return normal_step*(1+time_modulus*sgn)
