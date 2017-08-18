@@ -1,16 +1,14 @@
 import errno
 import socket
 import threading
+from collections import deque
 
 from sys import exc_info
 
 class StreamReader:
-    size = 2048
     def __init__(me,s):
         me.s=s
-        me.arr = [None for _ in xrange(me.size)]
-        me.start = 0
-        me.end = 0
+        me.queue = deque()
     def read(me):
         try:
             while True:
@@ -18,17 +16,16 @@ class StreamReader:
                 if r=='':
                     break
                 for c in r:
-                    me.arr[me.end] = c
-                    me.end+=1
-                    me.end %= me.size
-                i = 0
-                while (me.start+i)%me.size != me.end:
-                    if me.arr[(me.start+i)%me.size] == '|':
-                        yield ''.join(me.arr[(me.start+j)%me.size] for j in xrange(i))
-                        me.start += i+1
-                        me.start %= me.size
-                        i = -1
-                    i+=1
+                    me.queue.append(c)
+                msgs = []
+                last = 0
+                for i,c in enumerate(me.queue):
+                    if c == '|':
+                        msgs.append(i - last)
+                        last = i+1
+                for l in msgs:
+                    yield ''.join(me.queue.popleft() for i in xrange(l))
+                    me.queue.popleft()
         except socket.error,v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
@@ -75,3 +72,5 @@ class StreamRW:
             me.errs.append(exc_info())
     def get_errs(me):
         return me.errs
+    def get_ext_data(me):
+        {}
