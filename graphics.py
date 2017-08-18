@@ -236,7 +236,7 @@ class Main():
         
         if me.show_time:
             if me.times[me.tm_i%10] !=None and me.times[(me.tm_i+1)%10] !=None:
-                txt = str(10.0/(me.times[me.tm_i%10] - me.times[(me.tm_i+1)%10]))
+                txt = str(9.0/(me.times[me.tm_i%10] - me.times[(me.tm_i+1)%10]))
                 msg = font.render(txt,True,(0,0,0))
                 tw,th = msg.get_size()
                 rect = (0,0,tw+10,th+10)

@@ -15,7 +15,10 @@ class Clock:
         time.sleep(max(0,me.last+wtime-time.clock()))
         while time.clock()<me.last+wtime:
             pass
-        me.last = time.clock()
+        if time.clock()-(me.last+wtime) > 0.0005:
+            me.last = time.clock()
+        else:
+            me.last = (me.last+wtime)
     
     def get_time(me):
         return time.clock()-me.first
