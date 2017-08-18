@@ -19,22 +19,30 @@ class MsgOrder:
         me.cnt = 0
         me.lock = threading.Lock()
     def insert(me, ind, *data):
+        #print 'la1'
+        ret = False
         me.lock.acquire()
-        if ind in me.ord:
-            return
-        if me.ovrd or ind not in me.unordered:
-            me.unordered[ind] = data
+        if not ind in me.ord:
+            if me.ovrd or ind not in me.unordered:
+                ret = True
+                me.unordered[ind] = data
+        #print 'lr1'
         me.lock.release()
+        return ret
     def flush(me):
+        #print 'la2'
         me.lock.acquire()
-        while min(me.unordered)==me.cnt:
+        while len(me.unordered)>0 and min(me.unordered)==me.cnt:
             fy = me.unordered[me.cnt]
             me.unordered.pop(me.cnt)
             me.ord.add(me.cnt)
             me.cnt+=1
+            #print 'lr3'
             me.lock.release()
             yield fy
+            #print 'la3'
             me.lock.acquire()
+        #print 'lr2'
         me.lock.release()
             
 #unthreaded
@@ -63,8 +71,8 @@ class UDPStream:
             else:
                 me.addr = (ip,port)
                 me.sock.sendto(me.HELLO, me.addr)
-                print 'a'
-                print me.addr
+                #print 'a'
+                #print me.addr
             me.sock.setblocking(0)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
@@ -147,7 +155,7 @@ class UDPStream:
                 if addr!=me.addr:
                     continue
                 
-                print msg
+                #print msg
                 num,msg = msg.split(me.SPR)
                 
                 if num == me.ACK:
@@ -187,24 +195,33 @@ class UDPStream_v2:
     ACK = 'ACK'
     SEP = '|'
     def __init__(me, port, ip):
-        me.addr = (ip,port)
-        me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        me.sock.bind(('',port))
         me.unread = MsgOrder(False)
         
-        me.ack_lock = threading.Lock()
+        me.ack_lock = threading.RLock()
         me.unack = {}
         me.cnt = 0
         
         me.ok = True
         me.errs = []
+        me.ok_lock = threading.Lock()
         
         me.connected = False
         
+        me.snd_lock = threading.Lock()
+        me.addr = (ip,port)
+        me.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            me.sock.bind(('',port))
+        except:
+            me.log()
+
         me.connect()
         me.sock.setblocking(0)
-    def are_you_ok(me):
-        return me.ok
+    def are_you_OK(me):
+        me.ok_lock.acquire()
+        ret = me.ok
+        me.ok_lock.release()
+        return ret
     def get_errs(me):
         return me.errs
     def close(me):
@@ -218,35 +235,55 @@ class UDPStream_v2:
         me.check_msgs()
         me.send_msgs()
     def log(me,*data):
+        me.ok_lock.acquire()
         me.ok = False
+        me.ok_lock.release()
         me.errs.append((exc_info(), data))
         
     def get_msgs(me):
-        return me.unread.flush()
+        for m in me.unread.flush():
+            yield m[0]
     def insert_msg(me,msg):
+        #print 'la4'
         me.ack_lock.acquire()
         me.unack[me.cnt] = msg, time.clock()
         me.cnt+=1
+        #print 'lr4'
         me.ack_lock.release()
+        return me.cnt - 1
         
+    def send(me,txt):
+        me.snd_lock.acquire()
+        me.sock.sendto(txt,me.addr)
+        me.snd_lock.release()
     def check_msgs(me):
         try:
             while True:
+                #print 'r'
                 msg,addr = me.sock.recvfrom(1024)
-                print msg,addr,me.addr
+                #print msg,addr,me.addr
                 if addr != me.addr:
                     continue
                 if msg == me.HELLO:
                     me.connected = True
+                    #print me.connect, me.sock.gettimeout()
+                    if me.sock.gettimeout() is None:
+                        return
+                    else:
+                        continue
                 msg = msg.split(me.SEP)
                 if msg[0] == me.ACK:
+                    #print 'la5'
                     me.ack_lock.acquire()
-                    me.unack.pop(int(msg[1]))
+                    num = int(msg[1])
+                    if num in me.unack:
+                        me.unack.pop(num)
+                    #print 'lr5'
                     me.ack_lock.release()
                 else:
                     num = int(msg[0])
-                    me.unread.insert(num,msg[1])
-                    me.send_ack(num)
+                    if me.unread.insert(num,msg[1]):
+                        me.send_ack(num)
         except socket.timeout:
             pass
         except socket.error, v:
@@ -259,7 +296,8 @@ class UDPStream_v2:
     def send_ack(me, num):
         txt = me.ACK+me.SEP+str(num)
         try:
-            me.sock.sendto(txt,me.addr)
+            #print txt
+            me.send(txt)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
@@ -268,26 +306,34 @@ class UDPStream_v2:
         except:
             me.log()
     def send_msgs(me):
+        #print 'la6'
         me.ack_lock.acquire()
         for num in me.unack:
-            msg,tm = me.unack[num]
-            txt = str(num)+me.SEP+msg
-            try:
-                print txt
-                me.sock.sendto(txt,me.addr)
-            except socket.error, v:
-                if v[0] == errno.EWOULDBLOCK:
-                    pass
-                else:
-                    me.log(v)
-            except:
-                me.log()
+            me.send_msg(num)
+        #print 'lr6'
+        me.ack_lock.release()
+    def send_msg(me, num):
+        #print 'la6'
+        me.ack_lock.acquire()
+        msg,tm = me.unack[num]
+        txt = str(num)+me.SEP+msg
+        try:
+            #print txt
+            me.send(txt)
+        except socket.error, v:
+            if v[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                me.log(v)
+        except:
+            me.log()
+        #print 'lr6'
         me.ack_lock.release()
     def connect(me):
         while not me.connected:
             try:
-                print me.HELLO
-                me.sock.sendto(me.HELLO,me.addr)
+                #print me.HELLO
+                me.send(me.HELLO)
             except socket.error, v:
                 if v[0] == errno.EWOULDBLOCK:
                     pass
@@ -297,7 +343,8 @@ class UDPStream_v2:
                 me.log()
             me.check_msgs()
         try:
-            me.sock.sendto(me.HELLO,me.addr)
+            #print me.HELLO
+            me.send(me.HELLO)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
@@ -305,3 +352,49 @@ class UDPStream_v2:
                 me.log(v)
         except:
             me.log()
+    def get_ext_data(me):
+        {}            
+
+class UDPStream_v2_Thread(UDPStream_v2):
+    def __init__(me, port, ip):
+        UDPStream_v2.__init__(me,port,ip)
+        me.sock.settimeout(0.1)
+        
+        me.open = True
+        
+        me.write_cond = threading.Condition()
+        
+        me.check_thread = threading.Thread(target = me.check_thrd_f)
+        me.send_thread = threading.Thread(target = me.send_thrd_f)
+        
+        me.check_thread.start()
+        me.send_thread.start()
+    
+    def close(me):
+        me.ok_lock.acquire()
+        me.open = False
+        me.ok_lock.release()
+        
+        UDPStream_v2.close(me)
+    def read(me):
+        return me.get_msgs()
+    def write(me,msg):
+        num = me.insert_msg(msg)
+        
+        me.send_msg(num)
+    def is_open(me):
+        me.ok_lock.acquire()
+        ret = me.open
+        me.ok_lock.release()
+        return ret
+        
+    def check_thrd_f(me):
+        while me.is_open() and me.are_you_OK():
+            me.check_msgs()
+    def send_thrd_f(me):
+        while me.is_open() and me.are_you_OK():
+            me.write_cond.acquire()
+            me.write_cond.wait(0.05)
+            me.send_msgs()
+    
+    

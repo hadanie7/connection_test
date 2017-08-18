@@ -36,14 +36,16 @@ if __name__ == "__main__":
     STOP = 10*1000
     STOP_ANYWAY = 20*1000
     happy_ending = True
+    
+    print 'a'
     while True:
         tms.append( c.get_time() )
-        
+        print iii
         if iii < STOP:
             conn.write(str(iii))
-            
         for mes in conn.read():
             miii = int(mes)
+#            print '',miii
             assert miii == len(rec)
             rec.append( c.get_time() )            
             
@@ -54,10 +56,7 @@ if __name__ == "__main__":
         if not conn.are_you_OK():
             happy_ending = False
             for e in conn.get_errs():
-                if len(e) == 4:
-                    print e
-                else:
-                    traceback.print_tb(e[2] if len(e)==3 else e[1][2])
+                print e
             break
         
     conn.close()
@@ -65,4 +64,4 @@ if __name__ == "__main__":
     rec = np.array(rec)
 
     np.savez(get_timing_name(), tms = tms, rec = rec,
-             happy_ending=happy_ending, errs = conn.get_errs())
+             happy_ending=happy_ending, **conn.get_ext_data())

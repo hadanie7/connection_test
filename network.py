@@ -10,6 +10,7 @@ import struct
 
 import tcp_stream
 import udp_stream
+import udp_stream_v2
 
 PORT = 5555
 
@@ -66,6 +67,14 @@ def setup_conn():
         #or
         #
         # "UDP stream 2"
+        #
+        #or
+        #
+        # "UDP stream 2thrd"
+        #
+        #or
+        #
+        # "UDP stream red"
     
     if params[0] == 'TCP stream':
         if params[1] == 'serv':
@@ -86,3 +95,15 @@ def setup_conn():
         with open('local\\conn_ip.txt') as f:
             ip = f.read()
         return udp_stream.UDPStream_v2(PORT,ip)
+    if params[0] == 'UDP stream 2thrd':
+        with open('local\\conn_ip.txt') as f:
+            ip = f.read()
+        return udp_stream.UDPStream_v2_Thread(PORT,ip)
+    if params[0] == 'UDP stream red':
+        with open('local\\conn_ip.txt') as f:
+            ip = f.read()
+        return udp_stream_v2.UDPStreamRed(PORT,ip)
+    if params[0] == 'UDP stream grp':
+        with open('local\\conn_ip.txt') as f:
+            ip = f.read()
+        return udp_stream_v2.UDPStreamGrp(PORT,ip)
