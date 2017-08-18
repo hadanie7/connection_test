@@ -213,15 +213,20 @@ class UDPStreamGrp:
             me.send(mp.get_txt())
     
     def get_msgs(me):
+        ack = False
         try:
             while True:
                 msg,addr = me.sock.recvfrom(1024)
                 if addr!=me.addr:
                     continue
                 if msg == '':
+                    if ack:
+                        me.send_ack(me.rec_cnt-1)
                     return
                 if msg == me.HELLO:
                     me.connected = True
+                    if ack:
+                        me.send_ack(me.rec_cnt-1)
                     return
                 msg = msg.split(me.SEP)
                 if msg[0] == me.ACK:
@@ -233,10 +238,12 @@ class UDPStreamGrp:
                     l = len(msg)-1
 #                    print n,l,me.rec_cnt,msg
                     if me.rec_cnt < n+l and me.rec_cnt >= n:
-                        me.send_ack(n+l-1)
+                        ack |= True
                         me.unread.extend(msg[1+me.rec_cnt-n:])
                         me.rec_cnt = n+l
 #                    print me.unread
+            if ack:
+                me.send_ack(me.rec_cnt-1)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
