@@ -189,7 +189,7 @@ class UDPStreamGrp:
         me.unread = deque()
         me.rec_cnt = 0
         
-        me.ext_data = {'snt':0,'rec':0,'asnt':0,'arec':0}
+        me.ext_data = {'tsnt':0,'trec':0,'asnt':0,'arec':0}
         
         me.connect()
         
@@ -202,7 +202,7 @@ class UDPStreamGrp:
     def send(me, txt):
 #        print txt
         try:
-            me.ext_data['snt']+=1
+            me.ext_data['tsnt']+=1
             me.sock.sendto(txt,me.addr)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
@@ -229,7 +229,7 @@ class UDPStreamGrp:
                     if ack:
                         me.send_ack(me.rec_cnt-1)
                     return
-                me.ext_data['rec']+=1
+                me.ext_data['trec']+=1
                 if msg == me.HELLO:
                     me.connected = True
                     if ack:
