@@ -242,8 +242,6 @@ class UDPStreamGrp:
                         me.unread.extend(msg[1+me.rec_cnt-n:])
                         me.rec_cnt = n+l
 #                    print me.unread
-            if ack:
-                me.send_ack(me.rec_cnt-1)
         except socket.error, v:
             if v[0] == errno.EWOULDBLOCK:
                 pass
@@ -251,6 +249,8 @@ class UDPStreamGrp:
                 me.log(v)
         except:
             me.log()
+        if ack:
+            me.send_ack(me.rec_cnt-1)
     def connect(me):
         while not me.connected:
             me.send(me.HELLO)
