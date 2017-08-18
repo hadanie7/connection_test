@@ -76,7 +76,7 @@ class WorldDrawer:
         me.off = None
         me.pcoll = []
     def get_offset(me,world):
-        p = world.get_view_position()
+        p = world.get_view_position(me.my_cont)
         x = 0.5+0.5j
         return p - mod(p-x,w,h)-x
     def wrld2scrn(me,world, v, pos = True):
@@ -106,7 +106,8 @@ class WorldDrawer:
             if ppos!=None:
                 ret.add(ptile)
         return ret
-    def draw(me, scr, world, collisions):
+    def draw(me, scr, world, collisions, my_cont):
+        me.my_cont = my_cont
         view_moved = me.off != me.get_offset(world)
         moved = [view_moved for obj in world.get_objs()]
         
@@ -196,7 +197,7 @@ class Main():
         me.show_time = False
     def add_controls(me, contr, force):
         me.queues[contr].append(force)
-    def step(me):
+    def step(me, mouse_force_rec = None):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
@@ -210,6 +211,8 @@ class Main():
                 elif e.key == pygame.K_c:
                     me.show_time = not me.show_time
         force = (tup2comp(pygame.mouse.get_rel()) * ms_spd)
+        if mouse_force_rec:
+            mouse_force_rec[0] = force
         me.add_controls(me.my_cont,force)
                         
         pred = world_steps(me.world,me.queues,me.my_cont)
@@ -229,7 +232,7 @@ class Main():
                 play_sound('w_coll')
             if e.tp == 'box move':
                 play_sound('w_move')
-        me.drawer.draw(me.scr,pred, me.collisions)
+        me.drawer.draw(me.scr,pred, me.collisions, me.my_cont)
         
         if me.show_time:
             if me.times[me.tm_i%10] !=None and me.times[(me.tm_i+1)%10] !=None:
@@ -246,6 +249,8 @@ class Main():
         me.times[me.tm_i%10]=(time.clock())
         
         return True
+    def close(me):
+        pygame.quit()
         
         
 if __name__ == "__main__":
