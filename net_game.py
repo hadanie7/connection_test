@@ -51,8 +51,16 @@ if __name__ == "__main__":
         log = dict(tms=[], rec=[])
         ## select our actor our actor
         main_loop(**locals())
-    except:
-        game.close()
-        raise
-    conn.close()
-    logs.save_log(**log)
+    finally:
+        try:
+            conn.close()
+        except:
+            print 'failed to close connection'
+        try:
+            game.close()
+        except:
+            print 'failed to close graphics'
+        try:
+            logs.save_log(**log)
+        except:
+            print 'failed to save data'
