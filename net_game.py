@@ -37,11 +37,11 @@ def main_loop(my_ac, game, conn, c, log, **args):
                 log['rec'].append(c.get_time())
                 ctr, frc = unpack_movement(m[1:])
                 game.add_controls(ctr, frc)
-                lag_balancing.report_delay(iii-oiii)
+                lag_balancing.report_delay(iii, iii-oiii)
                 oiii += 1
             elif m[0] == 'l':
                 a = m.split()
-                lag_balancing.recv(a[1], a[2])
+                lag_balancing.recv(int(a[1]), int(a[2]))
 
         if not conn.are_you_OK():
             print "a connection error ocurred:"
