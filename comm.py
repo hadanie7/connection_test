@@ -23,28 +23,34 @@ if __name__ == "__main__":
     STOP_ANYWAY = 20*1000
     happy_ending = True
     
-    print 'a'
-    while True:
-        tms.append( c.get_time() )
-        print iii
-        if iii < STOP:
-            conn.write(str(iii))
-        for mes in conn.read():
-            miii = int(mes)
-#            print '',miii
-            assert miii == len(rec)
-            rec.append( c.get_time() )            
-            
-        iii += 1
-        c.tick(0.001)
-        if (len(tms) >= STOP and len(rec) >= STOP) or len(tms) >= STOP_ANYWAY:
-            break
-        if not conn.are_you_OK():
+    if not conn.are_you_OK():
             happy_ending = False
             for e in conn.get_errs():
                 print e
-            break
-        
+    else:
+    
+        print 'a'
+        while True:
+            tms.append( c.get_time() )
+            print iii
+            if iii < STOP:
+                conn.write(str(iii))
+            for mes in conn.read():
+                miii = int(mes)
+    #            print '',miii
+                assert miii == len(rec)
+                rec.append( c.get_time() )            
+                
+            iii += 1
+            c.tick(0.001)
+            if (len(tms) >= STOP and len(rec) >= STOP) or len(tms) >= STOP_ANYWAY:
+                break
+            if not conn.are_you_OK():
+                happy_ending = False
+                for e in conn.get_errs():
+                    print e
+                break
+            
     conn.close()
     
     logs.save_log(tms = tms, rec = rec,
