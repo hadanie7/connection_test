@@ -53,7 +53,7 @@ class SmoothedDelayed:
         
         
     def __init__(self, world, func_type = 'simple'):
-        smooth_types = {
+        self.smooth_types = {
                         'simple':lambda x: (min(x,5),null_func),
                         'once_per_10':(self.once_per_10,self.init_once),
                         }
