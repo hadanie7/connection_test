@@ -12,9 +12,10 @@ past_interval = 2*100
 time_modulus = 1.0/64
 max_delays = deque()
 my_maxs = deque()
+my_ts = deque()
 his_maxs = deque()
-cur_dif = 0
-target_dif = 0
+cur_t = 0
+target_t = 0
 send = None
 normal_step = None
 
@@ -33,9 +34,10 @@ def get_max():
 def try_cal():
     while len(my_maxs) > 0 and len(his_maxs) > 0:
         mm = my_maxs.popleft()
+        t = my_ts.popleft()
         hm = his_maxs.popleft()
-        global target_dif
-        target_dif = cur_dif + mm-hm
+        global target_t
+        target_t = t + (mm-hm)/4.0
 
 
 def recv(i, m):
@@ -48,12 +50,13 @@ def report_delay(i, d):
         m = get_max()
         send(i, get_max())
         my_maxs.append(m)
+        my_ts.append(cur_t)
         try_cal()
 
 def get_step():
     """returns step size"""
-    global cur_dif
-    tdir = target_dif - cur_dif
+    global cur_t
+    tdir = target_t - cur_t
     sgn = 0 if tdir == 0 else (-1 if tdir < 0 else 1) # positive - slow down
-    cur_dif += time_modulus*sgn*2
+    cur_t += time_modulus*sgn
     return normal_step*(1+time_modulus*sgn)
