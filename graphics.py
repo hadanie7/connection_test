@@ -17,6 +17,7 @@ import time
 import dummy
 
 from world import World
+from display_strategies import get_disp_strat
 
 pygame.mixer.pre_init(buffer=512)
 pygame.init()
@@ -168,25 +169,18 @@ class WorldDrawer:
         me.off = me.get_offset(world)
         me.positions = [obj.get_pos() for obj in world.get_objs()]
 
-def world_steps(world, queues, my_cont):
-    while all([len(q)>0 for q in queues]):
-        world.step([q.popleft() for q in queues])
-    prediction = world.get_copy()
-    for i in xrange(len(queues[my_cont])):
-        prediction.step([q[i] if len(q)>i else 0+0j for q in queues])
-    return prediction
-
 class Main():
     def __init__(me, my_cont = 0):
         me.scr = pygame.display.set_mode((scale*(w+1),scale*(h+1)), pygame.FULLSCREEN)
                 
         #world = dummy.DummyWorld()
-        me.world = World('levels\\test_level.txt')
+        world = World('levels\\test_level.txt')
         me.drawer = WorldDrawer()
         
         pygame.mouse.set_visible(False)
         
-        me.queues = [deque() for i in xrange(me.world.get_controller_count())]
+        me.queues = [deque() for i in xrange(world.get_controller_count())]
+        me.dstrat = get_disp_strat(world)
         
         me.my_cont = my_cont
         
@@ -215,7 +209,7 @@ class Main():
             mouse_force_rec[0] = force
         me.add_controls(me.my_cont,force)
                         
-        pred = world_steps(me.world,me.queues,me.my_cont)
+        pred = me.dstrat.step(me.queues,me.my_cont)
         fr = set()
         for coll in me.collisions:
             me.collisions[coll] -= 1
