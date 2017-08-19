@@ -11,8 +11,9 @@ import struct
 import tcp_stream
 import udp_stream
 import udp_stream_v2
+import enet_conn
 
-PORT = 5555
+PORT = 5553
 
 def yes_or_no(s):
     return s.lower == 'y'
@@ -89,35 +90,27 @@ def setup_conn():
         #or
         #
         # "UDP stream red"
-    
+    with open('local\\conn_ip.txt') as f:
+        ip = f.read() 
+        
     if params[0] == 'TCP stream':
         if params[1] == 'serv':
             ip = None
-        else:
-            with open('local\\conn_ip.txt') as f:
-                ip = f.read()
         s = get_tcp_socket(ip)
         return tcp_stream.StreamRW(s)
     if params[0] == 'UDP stream':
         if params[1] == 'serv':
             ip = None
-        else:
-            with open('local\\conn_ip.txt') as f:
-                ip = f.read()
         return udp_stream.UDPStream(PORT,ip)
     if params[0] == 'UDP stream 2':
-        with open('local\\conn_ip.txt') as f:
-            ip = f.read()
         return udp_stream.UDPStream_v2(PORT,ip)
     if params[0] == 'UDP stream 2thrd':
-        with open('local\\conn_ip.txt') as f:
-            ip = f.read()
         return udp_stream.UDPStream_v2_Thread(PORT,ip)
     if params[0] == 'UDP stream red':
-        with open('local\\conn_ip.txt') as f:
-            ip = f.read()
         return udp_stream_v2.UDPStreamRed(PORT,ip)
     if params[0] == 'UDP stream grp':
-        with open('local\\conn_ip.txt') as f:
-            ip = f.read()
         return udp_stream_v2.UDPStreamGrp(PORT,ip)
+    if params[0] == 'Enet':
+        if params[1] == 'serv':
+            return enet_conn.EnetConn(PORT)
+        return enet_conn.EnetConn(PORT,ip,False)
