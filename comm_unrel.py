@@ -15,15 +15,16 @@ def test(num, freq, pack_size):
     conn = setup_conn()
       
     tms = []
-    rec = []
+    rec = [float('NaN')]*num
+    
+    rec_num = 0
     
     c = Clock()
     iii = 0
     STOP = num
-    STOP_ANYWAY = 2*num
+    STOP_ANYWAY = 1.1*num
     happy_ending = True
     
-    rec = [float('NaN')]*num
     
     if not conn.are_you_OK():
             happy_ending = False
@@ -40,12 +41,13 @@ def test(num, freq, pack_size):
             for mes in conn.read_unrel():
                 miii = int(mes)
     #            print '',miii
-                assert miii == len(rec)
+#                assert miii == len(rec)
+                rec_num += 1
                 rec[miii] = c.get_time()
                 
             iii += 1
             c.tick(1.0/freq)
-            if (len(tms) >= STOP and len(rec) >= STOP) or len(tms) >= STOP_ANYWAY:
+            if (len(tms) >= STOP and rec_num >= STOP) or len(tms) >= STOP_ANYWAY:
                 break
             if not conn.are_you_OK():
                 happy_ending = False
@@ -59,5 +61,5 @@ def test(num, freq, pack_size):
              happy_ending=happy_ending)
              
              
-in __name__ == "__main__":
+if __name__ == "__main__":
     test(10*1000,1000,10)
