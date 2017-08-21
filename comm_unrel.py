@@ -11,7 +11,7 @@ import traceback
 
 import logs
 
-def test(num, freq, pack_size):
+def test(num, freq, pack_size, save = True):
     conn = setup_conn()
       
     tms = []
@@ -22,7 +22,7 @@ def test(num, freq, pack_size):
     c = Clock()
     iii = 0
     STOP = num
-    STOP_ANYWAY = 1.1*num
+    STOP_ANYWAY = 1.2*num
     happy_ending = True
     
     
@@ -57,9 +57,23 @@ def test(num, freq, pack_size):
             
     conn.close()
     
-    logs.save_log(tms = tms, rec = rec,
+    if save:
+        logs.save_log(tms = tms, rec = rec,
              happy_ending=happy_ending)
-             
+    return tms,rec,happy_ending
+
+def tests(*exps):
+    res = {}
+    for exp in exps:
+        tms,rec,hap = test(*exp, save = False)
+        res[exp] = {'tms':tms, 'rec':rec, 'happy_ending':hap}
+    logs.save_log(res = res)
+          
              
 if __name__ == "__main__":
-    test(10*1000,1000,10)
+    tests((10*1000,1000,10),
+          (10*1000,1000,100),
+          (10*1000,1000,1000),
+          (10*100,100,10),
+          (10*100,100,100),
+          (10*100,100,1000),)
