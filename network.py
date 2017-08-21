@@ -13,7 +13,7 @@ import udp_stream
 import udp_stream_v2
 import enet_conn
 
-PORT = 5553
+PORT = 5552
 
 def yes_or_no(s):
     return s.lower == 'y'

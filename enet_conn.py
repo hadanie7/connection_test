@@ -31,15 +31,16 @@ class EnetConn:
         
         
         me.unread = deque()
+        me.unread_unrel = deque()
         
     def log(me, *data):
         me.ok = False
         me.errs.append(data)
         
-    def send(me, msg):
+    def send(me, msg, rel = True):
         if me.connected == False:
             return
-        pack = enet.Packet(msg,enet.PACKET_FLAG_RELIABLE)
+        pack = enet.Packet(msg,enet.PACKET_FLAG_RELIABLE if rel else 0)
         me.peer.send(0,pack)
     def handle_event(me, event):
         if event.type == enet.EVENT_TYPE_NONE:
@@ -51,7 +52,10 @@ class EnetConn:
         elif event.type == enet.EVENT_TYPE_RECEIVE:
             if event.peer == me.peer:
                 data = event.packet.data
-                me.unread.append(data)
+                if event.packet.flags & enet.PACKET_FLAG_RELIABLE:
+                    me.unread.append(data)
+                else:
+                    me.unread_unrel.append(data)                    
         elif event.type == enet.EVENT_TYPE_DISCONNECT:
             if event.peer == me.peer:
                 me.connected = False
@@ -81,8 +85,14 @@ class EnetConn:
         me.all_events()
         while len(me.unread)>0:
             yield me.unread.popleft()
+    def read_unrel(me):
+        me.all_events()
+        while len(me.unread_unrel)>0:
+            yield me.unread_unrel.popleft()
     def write(me,msg):
         me.send(msg)
+    def write_unrel(me,msg):
+        me.send(msg, False)
     def are_you_OK(me):
         return me.ok
     def get_errs(me):
