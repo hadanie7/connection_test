@@ -65,13 +65,61 @@ class SmoothedDelayed:
         for i in xrange(self.smooth(x)):
             self.world.step([q.popleft() for q in queues])
         return self.world
+    
+class MovingExtrapolate:
+    act_num_w = 2
+    act_num_p = 4
+    def __init__(self, world):
+        self.world = world
+        self.pred = None
+        self.pred_diff = 0
+        self.sec_pred = None
+        self.pred_diff2 = 0
+    
+    def step(self, queues, my_cont):
+        to_real = min(len(q) for q in queues)
+                
+        wrld_mv = min(to_real, self.act_num_w)
+        for i in xrange(wrld_mv):
+            self.world.step([q.popleft() for q in queues])
+        self.pred_diff -= wrld_mv
+        self.pred_diff2 -= wrld_mv
+        
+        if self.pred_diff2 <= 0:
+            self.pred_diff2 = 0
+            self.pred2 = self.world.get_copy()
+        
+        real_to_disp = len(queues[my_cont])
+        if real_to_disp == 0:
+            self.pred_diff = 0
+            self.pred = self.world.get_copy()
+        elif real_to_disp-self.pred_diff2 < self.act_num_p:
+            for i in xrange(self.pred_diff2,real_to_disp):
+                self.pred2.step([q[i] if len(q)>i else 0+0j for q in queues])
+            self.pred_diff2 = real_to_disp
+            self.pred_diff = self.pred_diff2
+            self.pred = self.pred2
+            self.pred_diff2 = 0
+        else:
+            ac_p = real_to_disp - self.pred_diff
+            ac_2 = max(0,self.act_num_p-ac_p)
+            
+            for i in xrange(self.pred_diff,real_to_disp):
+                self.pred.step([q[i] if len(q)>i else 0+0j for q in queues])
+            self.pred_diff = real_to_disp
+            
+            for i in xrange(self.pred_diff2,self.pred_diff2+ac_2):
+                self.pred2.step([q[i] if len(q)>i else 0+0j for q in queues])
+            self.pred_diff2 += ac_2
+            
+        return self.pred
 
 def get_disp_strat(world):
     with open('local/disp_strat.txt') as f:
         params = f.read().split()
     tp = params[0]
     params = params[1:]
-    cls = {'SimpleExtrapolate':SimpleExtrapolate, 'SimpleDelayed':SimpleDelayed, 'SmoothedDelayed':SmoothedDelayed}[tp]
+    cls = {'SimpleExtrapolate':SimpleExtrapolate, 'SimpleDelayed':SimpleDelayed, 'SmoothedDelayed':SmoothedDelayed, 'MovingExtrapolate':MovingExtrapolate}[tp]
     return cls(world, *params)
 #    if tp == 'SimpleExtrapolate':
 #        return SimpleExtrapolate(world)
